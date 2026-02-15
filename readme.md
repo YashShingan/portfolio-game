@@ -21,13 +21,12 @@ An interactive portfolio website presented as a 2D top-down RPG game. Built with
 
 ## 🚀 How to Run
 
-Since this project uses ES6 JavaScript modules (`type="module"`), you cannot simply open `index.html` directly in a browser due to CORS (Cross-Origin Resource Sharing) policies. You must serve it through a local web server.
+Serve it through a local web server.
 
-### Option 1: VS Code (Recommended)
-1.  Install the **Live Server** extension.
-2.  Right-click `index.html` and select **"Open with Live Server"**.
+### 1. Vs code
+Download the extension `Go live server` and run through it.
 
-### Option 2: Python
+### 2. Python
 If you have Python installed, run this in the project folder:
 ```bash
 # Python 3
@@ -35,7 +34,7 @@ python -m http.server 8000
 ```
 Then open `http://localhost:8000` in your browser.
 
-### Option 3: Node.js
+### 3. Node.js
 ```bash
 npx http-server .
 ```
