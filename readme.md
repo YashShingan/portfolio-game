@@ -1,70 +1,137 @@
-# Pixel Portfolio Game
+# 🎮 Pixel Portfolio Game v2
 
-An interactive portfolio website presented as a 2D top-down RPG game. Built with JavaScript and the Phaser 3 framework.
+An interactive 2D top-down RPG portfolio website built with **Next.js 16**, **Phaser 3.90**, **TypeScript**, and **Tailwind CSS**.
 
-## 🎮 Features
+Rebuilt from the ground up as a complete rewrite of the original prototype, featuring a fixed 3000×3000 world, real-time multiplayer ghost visitors, procedural chiptune audio, interactive NPCs, unlockable achievements, and full mobile support.
 
--   **Interactive World**: Explore a pixel art world representing a professional portfolio.
--   **Zones**:
-    -   ⛲ **Fountain (About Me)**: Learn about the developer.
-    -   📋 **Noticeboard (Projects)**: View showcased projects.
-    -   🌻 **Garden (Skills)**: See technical skills and tools.
-    -   📫 **Mailbox (Contact)**: Get contact information.
--   **Path System**: Custom path visuals with collision detection (stay on the path!).
--   **Responsive**: The game world resizes to fit your browser window.
+---
 
-## 🛠️ Technologies
+## ✨ Features
 
--   **Phaser 3**: Game framework for rendering and physics.
--   **JavaScript (ES6)**: Modular code structure.
--   **HTML5 & CSS3**: UI overlays and modals.
+- 🗺️ **Expansive 3000×3000 World**: Seamless camera scrolling across a custom-rendered organic landscape featuring a central flagstone plaza, winding dirt paths, gardens, a fountain, and secret clearings.
+- 👻 **Multiplayer Ghost Visitors**: Real-time visitor presence powered by Server-Sent Events (SSE). Other visitors walking through the world appear as translucent ghosts with custom names and minimap radar pings.
+- 💬 **Interactive RPG Zones & NPCs**:
+  - ⛲ **Fountain Plaza**: Developer bio and background story with anchored 4-stage water cascade animations.
+  - 📋 **Noticeboards**: Interactive project showcases featuring descriptions, tech tags, and links.
+  - 🌱 **Skill Garden**: Visual breakdown of technical skills, frameworks, and tools.
+  - 📬 **Mailbox**: Contact links, social profiles, and quick messaging.
+  - 🐙 **NPC Dialogue**: In-game characters with retro RPG typewriter dialogue sequences.
+  - 🗝️ **Secret Clearing**: Hidden area and treasure chest with confetti rewards.
+- 🏆 **Achievements System**: Unlockable achievements (First Steps, Curious Explorer, Social Butterfly, Konami Code master, etc.) with a progress drawer and HUD badge.
+- 🗺️ **Live Minimap Radar**: Real-time HUD radar showing world landmarks, player position, and active visitor locations.
+- 🎵 **Procedural Chiptune Audio**: Zero external audio assets to download — 100% synthesized retro chiptune background melodies, footsteps, chime sounds, and fanfares synthesized via Web Audio API.
+- 📱 **Cross-Platform Responsive Controls**:
+  - **Desktop**: Full keyboard navigation (`W`, `A`, `S`, `D` or Arrow keys, `E` to interact, `ESC` to close).
+  - **Mobile / Touch**: Auto-detecting virtual floating joystick and on-screen action buttons.
+- ⚡ **SEO & Performance Optimized**: Instant-loading Next.js App Router shell with JSON-LD structured data and retro pixel typography (Press Start 2P).
 
-## 🚀 How to Run
+---
 
-Serve it through a local web server.
+## 🛠️ Tech Stack
 
-### 1. Vs code
-Download the extension `Go live server` and run through it.
+- **Framework**: [Next.js 16](https://nextjs.org/) (App Router, Server-Sent Events)
+- **Game Engine**: [Phaser 3.90](https://phaser.io/)
+- **UI & Styling**: [Tailwind CSS 4](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/), [Framer Motion](https://www.framer.com/motion/)
+- **Audio**: Web Audio API (procedural chiptune synthesizer)
+- **Language**: TypeScript
+- **State Management**: [Zustand](https://zustand.docs.pmnd.rs/)
 
-### 2. Python
-If you have Python installed, run this in the project folder:
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js**: v18.18 or higher (Node.js 20+ recommended)
+- **npm**, **pnpm**, or **bun**
+
+### 1. Installation
+
 ```bash
-# Python 3
-python -m http.server 8000
+git clone https://github.com/YashShingan/portfolio-game.git
+cd portfolio-game
+npm install
 ```
-Then open `http://localhost:8000` in your browser.
 
-### 3. Node.js
+### 2. Development Server
+
+Start the local development server:
+
 ```bash
-npx http-server .
+npm run dev
 ```
 
-## 🕹️ Controls
+Open [http://localhost:3000](http://localhost:3000) in your browser to explore the game.
 
--   **Move**: `W`, `A`, `S`, `D` or Arrow Keys.
--   **Interact**: Press `E` when near an object (a prompt will appear).
--   **Close Popup**: Press `ESC` or click the close button/outside the modal.
+### 3. Production Build
 
-## 📂 Project Structure
+To build and run the production application:
 
--   `index.html`: Entry point and UI overlays.
--   `js/`: Game logic.
-    -   `main.js`: Game initialization and loop.
-    -   `player.js`: Player sprite and movement logic.
-    -   `paths.js`: Tile generation and collision walls.
-    -   `zones.js`: Interactive objects and content data.
-    -   `utils.js`: Helper functions.
--   `assets/`: Images and sprites.
--   `css/`: Styling for HTML overlays.
+```bash
+npm run build
+npm start
+```
 
-## 🎨 Credits
+---
 
--   **Engine**: Phaser 3
+## 🎨 Customizing Content
 
-## 🌐 Deployment
+All portfolio content is centralized in a single configuration file:
 
-To play this game online:
-1.  Push this repository to GitHub.
-2.  Go to **Settings** > **Pages**.
-3.  Select the `main` branch and `/ (root)` folder, then click **Save**.
-4.  Your game will be live at `https://<username>.github.io/<repo-name>/`.
+👉 **[`src/config/portfolio.ts`](src/config/portfolio.ts)**
+
+You can easily update:
+- Your name, role, bio, and social links
+- Showcase projects (titles, descriptions, tags, and repo links)
+- Technical skill groups
+- NPC dialogue lines and custom character tints
+
+---
+
+## 📁 Project Structure
+
+```
+├── public/
+│   └── game-assets/          # Sprites, tiles, and cleaned pixel art
+├── src/
+│   ├── app/                  # Next.js App Router pages & SSE presence API
+│   │   ├── api/presence/     # Real-time ghost presence endpoints
+│   │   └── page.tsx          # Landing page & game mount
+│   ├── components/
+│   │   ├── game/             # React HUD, Minimap, Joystick, and Modals
+│   │   └── ui/               # UI components
+│   ├── config/
+│   │   └── portfolio.ts      # Portfolio content configuration
+│   ├── game/
+│   │   ├── entities/         # Player, NPC, and Ghost game objects
+│   │   ├── scenes/           # BootScene and WorldScene
+│   │   └── systems/          # Ground painting, Audio synth, Achievements
+│   └── lib/                  # Presence store and utilities
+├── scripts/                  # Build-time asset processing utilities
+├── package.json
+└── tsconfig.json
+```
+
+---
+
+## 🎮 Controls
+
+| Action | Desktop | Mobile / Touch |
+| :--- | :--- | :--- |
+| **Move** | `W`, `A`, `S`, `D` / Arrow Keys | Virtual Joystick |
+| **Interact** | `E` | Tap `(E)` Action Button |
+| **Close Window** | `ESC` / Click backdrop | Tap `✕` Button |
+| **Easter Egg** | Konami Code (`↑ ↑ ↓ ↓ ← → ← → B A`) | — |
+
+---
+
+## 📜 Version History
+
+- **v2.0 (Current)**: Complete rewrite with Next.js 16, Phaser 3.90, multiplayer ghosts, procedural audio, minimap, achievements, and responsive mobile controls.
+- **v1.0 (Legacy)**: Original vanilla JavaScript prototype (preserved on Git tag [`v1.0`](https://github.com/YashShingan/portfolio-game/tree/v1.0)).
+
+---
+
+## 📄 License
+
+MIT © [Yash Shingan](https://github.com/YashShingan)
