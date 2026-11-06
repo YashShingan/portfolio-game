@@ -62,8 +62,8 @@ export const portfolio = {
         "My portfolio re-imagined as a top-down pixel RPG. Rebuilt from v1 with a fixed 3000×3000 world, camera scrolling, event-driven interactions, procedural chiptune audio, full mobile controls and achievements. Nostalgia, but optimized.",
       tags: ["Phaser 3", "Next.js 16", "TypeScript", "Canvas"],
       links: [
-        { label: "View v1 source", url: "https://github.com/YashShingan/portfolio-game" },
-        // TODO(you): add your live deployed URL here
+        { label: "Live Game Demo", url: "https://yashshingan.github.io/portfolio-game/" },
+        { label: "View Source Code", url: "https://github.com/YashShingan/portfolio-game" },
       ],
     },
     {

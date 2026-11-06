@@ -35,14 +35,15 @@ export class BootScene extends Phaser.Scene {
     });
 
     // ---- Real assets (carried over from v1) ----
-    this.load.image("grass", "/game-assets/tiles/grass.png");
-    this.load.image("footpath", "/game-assets/tiles/footpath.png");
+    const base = process.env.NEXT_PUBLIC_BASE_PATH || "";
+    this.load.image("grass", `${base}/game-assets/tiles/grass.png`);
+    this.load.image("footpath", `${base}/game-assets/tiles/footpath.png`);
     // (roadturn/cornerjoin dropped — they were opaque noise squares that
     //  produced the mismatched "corner stamps" on the old plaza. The
     //  painted ground texture now handles all geometry properly.)
-    this.load.image("fountain", "/game-assets/images/fountain-clean.png");
-    this.load.image("noticeboard", "/game-assets/images/noticeboard.png");
-    this.load.spritesheet("player", "/game-assets/sprites/github-octopuss.png", {
+    this.load.image("fountain", `${base}/game-assets/images/fountain-clean.png`);
+    this.load.image("noticeboard", `${base}/game-assets/images/noticeboard.png`);
+    this.load.spritesheet("player", `${base}/game-assets/sprites/github-octopuss.png`, {
       frameWidth: 50,
       frameHeight: 50,
     });

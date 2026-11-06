@@ -1,9 +1,10 @@
 # 🎮 Pixel Portfolio Game v2
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FYashShingan%2Fportfolio-game)
+[![GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-blue?style=for-the-badge&logo=github)](https://yashshingan.github.io/portfolio-game/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> 🕹️ **Live Demo**: Deploy this project in 1-click on [Vercel](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FYashShingan%2Fportfolio-game) to get a live shareable URL, or follow the [Deployment Guide](#-one-click-deployment-free-hosting) below!
+> 🕹️ **Play Now (Live Demo)**: Test out the game right in your browser without installing anything:  
+> 👉 **[https://yashshingan.github.io/portfolio-game/](https://yashshingan.github.io/portfolio-game/)**
 
 An interactive 2D top-down RPG portfolio website built with **Next.js 16**, **Phaser 3.90**, **TypeScript**, and **Tailwind CSS**.
 
@@ -79,19 +80,25 @@ npm start
 
 ---
 
-## 🌐 One-Click Deployment (Free Hosting)
+## 🌐 Live Deployment on GitHub Pages (Free)
 
-Because Portfolio Game v2 uses **Next.js 16** with real-time multiplayer ghosts (Server-Sent Events), it runs best on modern fullstack platforms like **Vercel** or **Netlify**:
+This repository includes a pre-configured **GitHub Actions** workflow (`.github/workflows/deploy.yml`) that automatically builds and deploys your static portfolio to **GitHub Pages**:
 
-### Deploy to Vercel (Recommended — Free & 1-Minute Setup)
+👉 **[https://yashshingan.github.io/portfolio-game/](https://yashshingan.github.io/portfolio-game/)**
 
-1. Sign up / Log in to [vercel.com](https://vercel.com) using your GitHub account.
-2. Click **"Add New Project"** and select **`portfolio-game`**.
-3. Keep default settings (Next.js is detected automatically) and click **"Deploy"**.
-4. You will get a live URL (e.g. `https://portfolio-game-yashshingan.vercel.app`).
-5. Every time you push updates to GitHub `main`, Vercel will automatically redeploy!
+### 1-Minute Activation:
+1. Go to your repository on GitHub: [github.com/YashShingan/portfolio-game](https://github.com/YashShingan/portfolio-game)
+2. Click **Settings** (tab at the top) → **Pages** (in the left sidebar).
+3. Under **Build and deployment** > **Source**, choose **`GitHub Actions`**.
+4. That's it! GitHub will run the workflow and deploy the game. Any future `git push` to `main` will automatically build and update the live site.
 
-> 💡 **Tip**: Once deployed, copy your live link and paste it into GitHub's **About** sidebar (`⚙️ Website`) so anyone visiting your repo can launch the game instantly!
+> 💡 **Tip**: Once activated, paste your live link into the **About** section (`⚙️ Website`) in the right sidebar of your GitHub repository so anyone visiting your repo can jump straight into the game!
+
+---
+
+### Alternative: Deploy with Vercel
+
+If you prefer fullstack server-side features (like real-time SSE ghost visitors), you can also import this repo into [Vercel](https://vercel.com) with 1 click.
 
 ---
 

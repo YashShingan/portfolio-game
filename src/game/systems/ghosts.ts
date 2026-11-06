@@ -79,6 +79,9 @@ class GhostSystem {
     this.scene = scene;
     this.id = visitorId();
     if (!this.id) return;
+    // On static sites (like GitHub Pages), skip presence API requests
+    if (process.env.NEXT_PUBLIC_ENABLE_PRESENCE !== "true") return;
+
     window.addEventListener("pagehide", this.pageHide);
     try {
       this.es = new EventSource(
@@ -140,7 +143,7 @@ class GhostSystem {
 
   /** Throttled heartbeat to the server. Fire-and-forget. */
   report(x: number, y: number, moving: boolean, facing: string): void {
-    if (!this.id) return;
+    if (!this.id || process.env.NEXT_PUBLIC_ENABLE_PRESENCE !== "true") return;
     const now = performance.now();
     const moved =
       Math.abs(x - this.lastReportedPos.x) > 2 ||
@@ -194,7 +197,7 @@ class GhostSystem {
     this.scene = null;
     this.lastReport = 0;
     this.lastReportedPos = { x: -1, y: -1, moving: false };
-    if (this.id) {
+    if (this.id && process.env.NEXT_PUBLIC_ENABLE_PRESENCE === "true") {
       try {
         void fetch("/api/presence", {
           method: "POST",
