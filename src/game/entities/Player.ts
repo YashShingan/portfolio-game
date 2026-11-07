@@ -17,7 +17,7 @@ export class Player {
     this.sprite.body?.setSize(36, 30);
     this.sprite.body?.setOffset(7, 18);
     this.sprite.setCollideWorldBounds(true);
-    this.sprite.setDepth(y);
+    this.sprite.setDepth(y + 36);
     this.sprite.setTexture("player", 0);
   }
 
@@ -43,8 +43,8 @@ export class Player {
     // this, v2 had lost it: you moonwalked west). Keep last facing while idle.
     if (mvx < -0.05) this.sprite.setFlipX(true);
     else if (mvx > 0.05) this.sprite.setFlipX(false);
-    // Depth-sort against props for the 2.5D feel
-    this.sprite.setDepth(this.sprite.y);
+    // Depth-sort against props using feet position for true 2.5D sorting
+    this.sprite.setDepth(this.sprite.y + 36);
     return moving;
   }
 

@@ -40,11 +40,11 @@ export const PATHS: PathRect[] = [
   { x: 1436, y: 420, w: PATH_W, h: 600, horizontal: false }, // north
   { x: 1436, y: 1980, w: PATH_W, h: 600, horizontal: false }, // south
   { x: 420, y: 1436, w: 600, h: PATH_W, horizontal: true }, // west
-  { x: 1980, y: 1436, w: 600, h: PATH_W, horizontal: true }, // east
+  { x: 1980, y: 1436, w: 700, h: PATH_W, horizontal: true }, // east (leads through skill garden to east sanctuary)
   // Projects walkway (north district)
   { x: 900, y: 380, w: 1200, h: PATH_W, horizontal: true },
-  // Skills walkway (east district)
-  { x: 2340, y: 1250, w: PATH_W, h: 500, horizontal: false },
+  // Skills walkway (east district, connects north and south sanctuaries)
+  { x: 2340, y: 1220, w: PATH_W, h: 560, horizontal: false },
   // Contact walkway (south district)
   { x: 1200, y: 2350, w: 600, h: PATH_W, horizontal: true },
   // Secret trail — narrower, branches off the projects walkway
@@ -63,9 +63,9 @@ export const CLEAR_ZONES = PATHS.map((p) => ({
   // plaza + margin
   { x: PLAZA.cx - PLAZA.half - 50, y: PLAZA.cy - PLAZA.half - 50, w: PLAZA.half * 2 + 100, h: PLAZA.half * 2 + 100 },
   // projects boards area
-  { x: 860, y: 240, w: 1340, h: 400 },
-  // skills garden area
-  { x: 2280, y: 1180, w: 320, h: 680 },
+  { x: 860, y: 200, w: 1340, h: 440 },
+  // skills garden sanctuary area (spacious botanical courtyard)
+  { x: 2180, y: 1100, w: 580, h: 780 },
   // contact area
   { x: 1140, y: 2290, w: 720, h: 340 },
   // secret chest clearing (around the trail's dead end)
@@ -77,19 +77,19 @@ export const CLEAR_ZONES = PATHS.map((p) => ({
   { x: 320, y: 1360, w: 240, h: 280 },
 ]);
 
-/** Project noticeboards — one per project, along the north walkway */
+/** Project noticeboards — one per project, along north walkway at y=335 facing south onto the walkway */
 export const PROJECT_BOARDS = portfolio.projects.map((p, i) => ({
   id: p.id,
-  x: 1080 + i * 300,
-  y: 444,
+  x: 1060 + i * 300,
+  y: 335,
 }));
 
-/** Skill patches — one per group, along the east walkway */
-export const SKILL_PATCHES = portfolio.skills.map((s, i) => ({
-  id: s.id,
-  x: 2404,
-  y: 1320 + i * 220,
-}));
+/** Skill sanctuaries — 3 themed arboretum sanctuaries (North, East, South) */
+export const SKILL_PATCHES = [
+  { id: "s0", x: 2404, y: 1220 }, // Frontend (North Blooming Pavilion)
+  { id: "s1", x: 2640, y: 1500 }, // Backend (East Zen Rockery & Monolith)
+  { id: "s2", x: 2404, y: 1780 }, // Tools & Craft (South Timber Pergola)
+];
 
 /** Fixed interactable points (all in world coords) */
 export const POINTS = {
@@ -110,6 +110,15 @@ export const GROUND_PADS = [
   { x: POINTS.welcomeSign.x, y: POINTS.welcomeSign.y + 44, r: 66 },
   { x: POINTS.npcOldOcto.x, y: POINTS.npcOldOcto.y + 26, r: 74 },
   { x: POINTS.npcPixel.x, y: POINTS.npcPixel.y + 26, r: 74 },
+  // Botanical garden pads under each shrine
+  { x: 2404, y: 1220, r: 80 },
+  { x: 2640, y: 1500, r: 80 },
+  { x: 2404, y: 1780, r: 80 },
+  // Project exhibition pads
+  { x: 1060, y: 375, r: 54 },
+  { x: 1360, y: 375, r: 54 },
+  { x: 1660, y: 375, r: 54 },
+  { x: 1960, y: 375, r: 54 },
 ];
 
 /** Trees framing the secret chest clearing (placed deliberately) */
@@ -124,9 +133,9 @@ export const CHEST_TREES = [
 
 /** Floating district labels */
 export const LABELS = [
-  { text: "PROJECTS", x: 1500, y: 300 },
+  { text: "PROJECTS", x: 1500, y: 220 },
   { text: "ABOUT", x: 1500, y: 1230 },
-  { text: "SKILLS", x: 2470, y: 1210 },
+  { text: "SKILLS GARDEN", x: 2404, y: 1110 },
   { text: "CONTACT", x: 1500, y: 2300 },
 ];
 

@@ -26,29 +26,24 @@ export function GameOverlay({ open, onClose }: { open: boolean; onClose: () => v
   const [prompt, setPrompt] = useState<string | null>(null);
   const [zone, setZone] = useState<ZonePayload | null>(null);
   const [ready, setReady] = useState(false);
-  const [muted, setMuted] = useState(false);
-  const [touch, setTouch] = useState(false);
+  const [muted, setMuted] = useState(() => audio.isMuted);
+  const [touch, setTouch] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      window.matchMedia("(pointer: coarse)").matches ||
+      window.matchMedia("(any-pointer: coarse)").matches ||
+      navigator.maxTouchPoints > 1
+    );
+  });
   const [achOpen, setAchOpen] = useState(false);
-  const [achCount, setAchCount] = useState(0);
+  const [achCount, setAchCount] = useState(() => unlockedIds().size);
   const [presence, setPresence] = useState(1);
 
   // Device capability — controls which input UI we show.
-  // Coarse pointer (phones/tablets), ANY coarse pointer, or a multi-touch
-  // digitizer → show the joystick. Some in-app browsers (webviews) manage
-  // to misreport ALL of those, so as a bulletproof fallback we also flip
-  // touch UI on the first REAL touch seen anywhere on the page — a touch
-  // is proof no media query can argue with. This listener lives for the
-  // whole page session, so it catches the first tap on the landing page
-  // ("ENTER THE GAME") even before the overlay opens.
+  // Fallback touch detection: catches the first REAL touch seen anywhere on the page
+  // if media queries misreported coarse pointer capability.
   useEffect(() => {
-    const looksTouch =
-      window.matchMedia("(pointer: coarse)").matches ||
-      window.matchMedia("(any-pointer: coarse)").matches ||
-      navigator.maxTouchPoints > 1;
-    if (looksTouch) {
-      setTouch(true);
-      return;
-    }
+    if (touch) return;
     const onTouchStart = () => {
       setTouch(true);
       detach();
@@ -63,11 +58,10 @@ export function GameOverlay({ open, onClose }: { open: boolean; onClose: () => v
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("pointerdown", onPointerDown, { passive: true });
     return detach;
-  }, []);
+  }, [touch]);
 
   useEffect(() => {
     if (!open) return;
-    setPresence(1);
     let destroyed = false;
     const cleanups: Array<() => void> = [];
 
@@ -75,8 +69,12 @@ export function GameOverlay({ open, onClose }: { open: boolean; onClose: () => v
     document.body.style.overflow = "hidden";
     resetSharedState();
     audio.init();
-    setMuted(audio.isMuted);
-    setAchCount(unlockedIds().size);
+    queueMicrotask(() => {
+      if (!destroyed) {
+        setMuted(audio.isMuted);
+        setAchCount(unlockedIds().size);
+      }
+    });
 
     // Let the pixel font settle so canvas text renders crisp on first draw
     Promise.race([

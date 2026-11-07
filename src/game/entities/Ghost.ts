@@ -40,14 +40,14 @@ export class Ghost {
       .image(spawn.x, spawn.y + 26, "ghost-glow")
       .setScale(3.4)
       .setAlpha(0)
-      .setDepth(spawn.y - 1)
+      .setDepth(spawn.y + 35)
       .setBlendMode(Phaser.BlendModes.ADD);
 
     this.sprite = scene.add
       .sprite(spawn.x, spawn.y, "player", 0)
       .setScale(1.6)
       .setAlpha(0)
-      .setDepth(spawn.y);
+      .setDepth(spawn.y + 36);
     this.sprite.setTint(0xa8d8ff);
 
     this.label = scene.add
@@ -123,9 +123,9 @@ export class Ghost {
     }
     this.sprite.setFlipX(this.facing === "left");
 
-    this.sprite.setDepth(this.sprite.y);
+    this.sprite.setDepth(this.sprite.y + 36);
     this.glow.setPosition(this.sprite.x, this.sprite.y + 26);
-    this.glow.setDepth(this.sprite.y - 1);
+    this.glow.setDepth(this.sprite.y + 35);
     this.label.setPosition(this.sprite.x, this.sprite.y - 64);
   }
 

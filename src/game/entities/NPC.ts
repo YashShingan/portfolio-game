@@ -30,7 +30,7 @@ export class NPC {
     (this.sprite.body as Phaser.Physics.Arcade.Body).setImmovable(true);
     (this.sprite.body as Phaser.Physics.Arcade.Body).setSize(36, 30);
     (this.sprite.body as Phaser.Physics.Arcade.Body).setOffset(7, 18);
-    this.sprite.setDepth(y);
+    this.sprite.setDepth(y + 34);
 
     // Idle bob — subtle life without burning CPU
     scene.tweens.add({
@@ -85,7 +85,7 @@ export class NPC {
   update(): void {
     // Keep the name tag above the wander/bob position
     this.label.setPosition(this.sprite.x, this.sprite.y - 66);
-    this.sprite.setDepth(this.sprite.y);
+    this.sprite.setDepth(this.sprite.y + 34);
   }
 
   destroy(): void {

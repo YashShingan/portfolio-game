@@ -168,12 +168,18 @@ export function buildGroundTexture(scene: Phaser.Scene): void {
   const pzS = S(PLAZA.half * 2);
   fillRoundRect(plazaMask, pzX, pzY, pzS, pzS, 8);
 
-  // Stone ring grounding the fountain
-  const fC = { x: S(POINTS.fountain.x), y: S(POINTS.fountain.y + 56) };
-  const fR = S(210);
+  // Stone ring grounding the fountain (centered around basin at y + 42)
+  const fC = { x: S(POINTS.fountain.x), y: S(POINTS.fountain.y + 42) };
+  const fR = S(185);
   fillCircle(ringMask, fC.x, fC.y, fR);
 
-  // Soft dirt pads under off-path props
+  // Central Skills Garden Courtyard stone paving
+  const gardenCourtyardMask = new Uint8Array(GW * GH);
+  const gCourtyardC = { x: S(2404), y: S(1500) };
+  const gCourtyardR = S(80);
+  fillCircle(gardenCourtyardMask, gCourtyardC.x, gCourtyardC.y, gCourtyardR);
+
+  // Soft dirt pads under off-path props & garden shrines
   for (const p of GROUND_PADS) fillCircle(padMask, S(p.x), S(p.y), S(p.r));
 
   // Composite dirt = paths ∪ pads, erode/dither its grass border
@@ -234,13 +240,74 @@ export function buildGroundTexture(scene: Phaser.Scene): void {
       plazaMask[(y - 1 < 0 ? 0 : y - 1) * GW + x] ||
       plazaMask[(y + 1 >= GH ? GH - 1 : y + 1) * GW + x]));
 
+  // Garden bed centers in texel coords for rich loam detailing
+  const gardenBeds = [
+    { x: S(2404), y: S(1220), r: S(76) },
+    { x: S(2640), y: S(1500), r: S(76) },
+    { x: S(2404), y: S(1780), r: S(76) },
+  ];
+
+  const projectPads = [
+    { x: S(1060), y: S(375), r: S(52) },
+    { x: S(1360), y: S(375), r: S(52) },
+    { x: S(1660), y: S(375), r: S(52) },
+    { x: S(1960), y: S(375), r: S(52) },
+  ];
+
   for (let y = 0; y < GH; y++) {
     for (let x = 0; x < GW; x++) {
       const idx = y * GW + x; // mask index
       const i = idx * 4; // RGBA index — put() writes 4 channels
 
-      // 1) Dirt wins over everything — spokes cut through the plaza
+      // 1) Garden courtyard stone paving (takes precedence over dirt crossroads)
+      if (gardenCourtyardMask[idx]) {
+        const dx = x + 0.5 - gCourtyardC.x;
+        const dy = y + 0.5 - gCourtyardC.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const ring = Math.abs(dist - gCourtyardR * 0.48) < 0.6 || Math.abs(dist - gCourtyardR * 0.88) < 0.5;
+        const curb = dist > gCourtyardR - 1.2;
+        const grout = (x + y) % 4 === 0 || (x - y) % 4 === 0;
+        const tone = STONE_PALETTE[(hash2(x, y) * STONE_PALETTE.length) | 0];
+        put(i, tone, curb ? 0.7 : ring ? 0.64 : grout ? 0.78 : 0.96 + hash2(x, y) * 0.08);
+        continue;
+      }
+
+      // 1b) Project exhibition stone pedestals
+      const inProjPad = projectPads.find((b) => Math.hypot(x + 0.5 - b.x, y + 0.5 - b.y) <= b.r);
+      if (inProjPad) {
+        const dist = Math.hypot(x + 0.5 - inProjPad.x, y + 0.5 - inProjPad.y);
+        const curb = dist > inProjPad.r - 1.2;
+        const ring = Math.abs(dist - inProjPad.r * 0.6) < 0.6;
+        const tone = STONE_PALETTE[(hash2(x, y) * STONE_PALETTE.length) | 0];
+        put(i, tone, curb ? 0.72 : ring ? 0.8 : 0.94 + hash2(x, y) * 0.08);
+        continue;
+      }
+
+      // 2) Dirt & Garden Loam
       if (dirtMask[idx]) {
+        // Check if inside a garden sanctuary bed
+        const inBed = gardenBeds.find(
+          (b) => Math.hypot(x + 0.5 - b.x, y + 0.5 - b.y) <= b.r,
+        );
+        if (inBed) {
+          const distToBed = Math.hypot(x + 0.5 - inBed.x, y + 0.5 - inBed.y);
+          if (distToBed > inBed.r - 1.4) {
+            put(i, [154, 149, 138], 0.82); // stone curb border
+            continue;
+          }
+          // Rich dark garden loam with occasional floral petal flecks
+          const rLoam = hash2(x * 3, y * 3);
+          if (rLoam < 0.04) {
+            put(i, [245, 143, 179]); // pink petal fleck
+          } else if (rLoam < 0.07) {
+            put(i, [255, 209, 102]); // gold pollen fleck
+          } else {
+            const loamShade = 0.82 + hash2(x, y) * 0.16;
+            put(i, [84, 60, 42], loamShade);
+          }
+          continue;
+        }
+
         if (rng() < 0.015) {
           put(i, [172, 158, 130], 0.94 + rng() * 0.12); // pale pebble
           continue;

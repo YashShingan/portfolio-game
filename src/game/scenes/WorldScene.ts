@@ -150,8 +150,8 @@ export class WorldScene extends Phaser.Scene {
     const key = rng() > 0.5 ? "tree1" : "tree2";
     // Size variance so forests don't look like a cloned sprite wall
     const scale = 0.92 + rng() * 0.2;
-    this.add.image(x, y, key).setDepth(y + 60).setScale(scale);
-    this.add.image(x, y + 84, "shadow").setDepth(y + 61).setScale(1);
+    this.add.image(x, y, key).setDepth(y + 84).setScale(scale);
+    this.add.image(x, y + 84, "shadow").setDepth(y + 83).setScale(1);
     // Static collider on the trunk only
     const body = this.add.rectangle(x, y + 78, 30, 14, 0x000000, 0);
     this.statics.add(body);
@@ -202,20 +202,35 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private buildProps(): void {
-
     // --- Fountain (About) ---
+    // Fountain base touches the ground at y = POINTS.fountain.y + 98 (1598).
+    // Using 1598 as depth ensures proper 2.5D y-sorting:
+    // When player feet Y < 1598 (north), player is behind the fountain statue.
+    // When player feet Y > 1598 (south), player is in front of the basin rim.
+    const fountainDepth = POINTS.fountain.y + 98;
     const f = this.add.image(POINTS.fountain.x, POINTS.fountain.y, "fountain");
-    f.setScale(0.72).setDepth(POINTS.fountain.y + 170);
-    this.add.image(POINTS.fountain.x, POINTS.fountain.y + 160, "shadow").setDepth(POINTS.fountain.y + 169).setScale(1.4, 1);
-    const fBody = this.add.rectangle(POINTS.fountain.x, POINTS.fountain.y + 120, 330, 220, 0, 0);
-    this.statics.add(fBody);
-    fBody.setDepth(-200);
+    f.setScale(0.72).setDepth(fountainDepth);
+    this.add
+      .image(POINTS.fountain.x, POINTS.fountain.y + 95, "shadow")
+      .setDepth(fountainDepth - 6)
+      .setScale(1.6, 1.1);
 
-    // Fountain glow (kept from v1 — it was actually charming)
+    // Precise 4-tier colliders tightly enclosing the oval water basin
+    // (from y=1480 to 1598, leaving the entire north and south plaza pavement clear):
+    const b1 = this.add.rectangle(POINTS.fountain.x, POINTS.fountain.y - 5, 170, 30, 0, 0); // 1480..1510
+    const b2 = this.add.rectangle(POINTS.fountain.x, POINTS.fountain.y + 25, 210, 30, 0, 0); // 1510..1540
+    const b3 = this.add.rectangle(POINTS.fountain.x, POINTS.fountain.y + 55, 210, 30, 0, 0); // 1540..1570
+    const b4 = this.add.rectangle(POINTS.fountain.x, POINTS.fountain.y + 84, 150, 28, 0, 0); // 1570..1598
+    [b1, b2, b3, b4].forEach((b) => {
+      this.statics.add(b);
+      b.setDepth(-200);
+    });
+
+    // Fountain glow
     const glow = this.add
       .circle(POINTS.fountain.x, POINTS.fountain.y - 20, 80, 0xffffff, 0.12)
       .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(POINTS.fountain.y + 171);
+      .setDepth(fountainDepth + 3);
     this.tweens.add({
       targets: glow,
       alpha: { from: 0.07, to: 0.3 },
@@ -225,20 +240,62 @@ export class WorldScene extends Phaser.Scene {
       ease: "Sine.easeInOut",
     });
 
-    // --- Project noticeboards ---
+    // --- Project Exhibition Showcases ---
     PROJECT_BOARDS.forEach((b, i) => {
-      const emoji = portfolio.projects[i]?.emoji ?? "📋";
-      this.add.image(b.x, b.y, "noticeboard").setScale(4).setDepth(b.y + 62);
-      const body = this.add.rectangle(b.x, b.y + 52, 100, 22, 0, 0);
+      const project = portfolio.projects[i];
+      const emoji = project?.emoji ?? "📋";
+      const kioskKey = `proj-kiosk-${i}`;
+
+      // Ground shadow & interactive halo
+      this.add
+        .image(b.x, b.y + 50, "shadow")
+        .setScale(1.6, 1)
+        .setDepth(b.y + 48);
+      const halo = this.add
+        .image(b.x, b.y + 54, "proj-halo")
+        .setDepth(b.y + 49)
+        .setAlpha(0.6);
+      this.tweens.add({
+        targets: halo,
+        alpha: { from: 0.35, to: 0.85 },
+        scaleX: { from: 0.95, to: 1.08 },
+        duration: 1600 + i * 200,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+
+      // The distinctive showcase kiosk
+      this.add.image(b.x, b.y, kioskKey).setDepth(b.y + 54);
+
+      // Solid base collider (resting along north edge of walkway)
+      const body = this.add.rectangle(b.x, b.y + 44, 88, 22, 0, 0);
       this.statics.add(body);
       body.setDepth(-200);
-      const label = this.add
-        .text(b.x, b.y - 88, emoji, { fontSize: "30px" })
-        .setOrigin(0.5)
-        .setDepth(2990);
+
+      // Floating interactive badge with project title & emoji
+      const badge = this.add.container(b.x, b.y - 66).setDepth(2990);
+      const plaqueW = Math.min(184, Math.max(126, project.title.length * 8 + 48));
+      const badgeBg = this.add
+        .graphics()
+        .fillStyle(0x141008, 0.94)
+        .fillRoundedRect(-plaqueW / 2, -18, plaqueW, 36, 8)
+        .lineStyle(2, 0xe8c170, 0.95)
+        .strokeRoundedRect(-plaqueW / 2, -18, plaqueW, 36, 8);
+      const icon = this.add.text(-plaqueW / 2 + 18, 0, emoji, { fontSize: "18px" }).setOrigin(0.5);
+      const title = this.add
+        .text(-plaqueW / 2 + 34, 0, project.title, {
+          fontFamily: pixelFont(),
+          fontSize: "10px",
+          color: "#f5e6c8",
+        })
+        .setOrigin(0, 0.5)
+        .setResolution(2);
+      badge.add([badgeBg, icon, title]);
+
       this.tweens.add({
-        targets: label,
-        y: b.y - 96,
+        targets: badge,
+        y: b.y - 74,
         duration: 1400 + i * 160,
         yoyo: true,
         repeat: -1,
@@ -246,30 +303,132 @@ export class WorldScene extends Phaser.Scene {
       });
     });
 
-    // --- Skills garden patches ---
+    // --- Skills Garden / Arboretum ---
+    const gardenCx = 2404;
+    const gardenCy = 1500;
+
+    // Central Sundial Centerpiece
+    this.add.image(gardenCx, gardenCy, "garden-sundial").setDepth(gardenCy + 18);
+    this.add.image(gardenCx, gardenCy + 18, "shadow").setScale(0.8, 0.6).setDepth(gardenCy + 15);
+    const sundialBody = this.add.rectangle(gardenCx, gardenCy + 8, 32, 22, 0, 0);
+    this.statics.add(sundialBody);
+    sundialBody.setDepth(-200);
+
+    // Park benches placed in courtyard corners (off walkways)
+    const benches = [
+      { x: gardenCx - 88, y: 1400 },
+      { x: gardenCx - 88, y: 1600 },
+    ];
+    benches.forEach((bn) => {
+      this.add.image(bn.x, bn.y, "garden-bench").setDepth(bn.y + 20);
+      this.add.image(bn.x, bn.y + 16, "shadow").setScale(1, 0.7).setDepth(bn.y + 14);
+      const bBody = this.add.rectangle(bn.x, bn.y + 10, 52, 18, 0, 0);
+      this.statics.add(bBody);
+      bBody.setDepth(-200);
+    });
+
+    // Decorative trimmed boxwood hedges framing garden paths & borders
+    const hedges = [
+      // Along path from plaza (north & south borders)
+      { x: 2060, y: 1395 },
+      { x: 2110, y: 1395 },
+      { x: 2210, y: 1395 },
+      { x: 2260, y: 1395 },
+      { x: 2060, y: 1605 },
+      { x: 2110, y: 1605 },
+      { x: 2210, y: 1605 },
+      { x: 2260, y: 1605 },
+      // Courtyard corner hedges
+      { x: gardenCx - 88, y: 1350 },
+      { x: gardenCx - 88, y: 1650 },
+      { x: gardenCx + 88, y: 1350 },
+      { x: gardenCx + 88, y: 1650 },
+      // Flanking Frontend sanctuary
+      { x: gardenCx - 90, y: 1220 },
+      { x: gardenCx + 90, y: 1220 },
+      // Flanking Tools sanctuary
+      { x: gardenCx - 90, y: 1780 },
+      { x: gardenCx + 90, y: 1780 },
+    ];
+    hedges.forEach((h) => {
+      this.add.image(h.x, h.y, "garden-hedge").setDepth(h.y + 14);
+      const hBody = this.add.rectangle(h.x, h.y + 6, 40, 16, 0, 0);
+      this.statics.add(hBody);
+      hBody.setDepth(-200);
+    });
+
+    // Wrought-iron garden lamps with soft glowing lanterns
+    const lamps = [
+      { x: 2160, y: 1390 },
+      { x: 2160, y: 1610 },
+      { x: gardenCx + 110, y: 1390 },
+      { x: gardenCx + 110, y: 1610 },
+      { x: gardenCx - 90, y: 1270 },
+      { x: gardenCx + 90, y: 1270 },
+      { x: gardenCx - 90, y: 1730 },
+      { x: gardenCx + 90, y: 1730 },
+    ];
+    lamps.forEach((lamp) => {
+      this.add.image(lamp.x, lamp.y, "garden-lamp").setDepth(lamp.y + 34);
+      this.add.image(lamp.x, lamp.y + 30, "shadow").setScale(0.5, 0.4).setDepth(lamp.y + 28);
+      const lBody = this.add.rectangle(lamp.x, lamp.y + 28, 16, 12, 0, 0);
+      this.statics.add(lBody);
+      lBody.setDepth(-200);
+
+      const lampHalo = this.add
+        .circle(lamp.x, lamp.y - 14, 38, 0xffe58f, 0.18)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(lamp.y + 35);
+      this.tweens.add({
+        targets: lampHalo,
+        alpha: { from: 0.12, to: 0.28 },
+        duration: 1800 + Math.random() * 600,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    });
+
+    // The 3 Distinct Garden Sanctuaries (Frontend, Backend, Tools)
+    const shrineKeys = ["shrine-frontend", "shrine-backend", "shrine-tools"];
     SKILL_PATCHES.forEach((s, i) => {
       const group = portfolio.skills[i];
-      const g = this.add.graphics().setDepth(s.y - 10);
-      g.fillStyle(0x2d5a27, 0.85);
-      g.fillRoundedRect(s.x - 78, s.y - 90, 156, 180, 14);
-      g.lineStyle(3, 0x8fce6b, 0.5);
-      g.strokeRoundedRect(s.x - 78, s.y - 90, 156, 180, 14);
-      const rng = mulberry32(777 + i);
-      for (let k = 0; k < 10; k++) {
-        const fx = s.x - 60 + rng() * 120;
-        const fy = s.y - 72 + rng() * 144;
-        this.add
-          .image(fx, fy, `flower${Math.floor(rng() * 3)}`)
-          .setScale(1.6)
-          .setDepth(s.y - 5 + k * 0.001);
-      }
-      const label = this.add
-        .text(s.x, s.y - 116, group.emoji, { fontSize: "28px" })
-        .setOrigin(0.5)
-        .setDepth(2990);
+      const shrineKey = shrineKeys[i];
+
+      // Ground shadow
+      this.add.image(s.x, s.y + 44, "shadow").setScale(2.2, 1.3).setDepth(s.y + 38);
+
+      // Sanctuary pavilion
+      this.add.image(s.x, s.y, shrineKey).setDepth(s.y + 44);
+
+      // Solid base collider
+      const body = this.add.rectangle(s.x, s.y + 28, 108, 30, 0, 0);
+      this.statics.add(body);
+      body.setDepth(-200);
+
+      // Floating illuminated skill badge & plaque
+      const badge = this.add.container(s.x, s.y - 62).setDepth(2990);
+      const plaqueW = 152;
+      const badgeBg = this.add
+        .graphics()
+        .fillStyle(0x141008, 0.94)
+        .fillRoundedRect(-plaqueW / 2, -18, plaqueW, 36, 8)
+        .lineStyle(2, 0x8fce6b, 0.95)
+        .strokeRoundedRect(-plaqueW / 2, -18, plaqueW, 36, 8);
+      const icon = this.add.text(-plaqueW / 2 + 18, 0, group.emoji, { fontSize: "18px" }).setOrigin(0.5);
+      const title = this.add
+        .text(-plaqueW / 2 + 34, 0, `${group.name} Skills`, {
+          fontFamily: pixelFont(),
+          fontSize: "11px",
+          color: "#d8f3dc",
+        })
+        .setOrigin(0, 0.5)
+        .setResolution(2);
+      badge.add([badgeBg, icon, title]);
+
       this.tweens.add({
-        targets: label,
-        y: s.y - 124,
+        targets: badge,
+        y: s.y - 70,
         duration: 1500 + i * 200,
         yoyo: true,
         repeat: -1,
@@ -291,10 +450,14 @@ export class WorldScene extends Phaser.Scene {
 
     // --- Welcome sign ---
     this.add
-      .image(POINTS.welcomeSign.x, POINTS.welcomeSign.y, "noticeboard")
-      .setScale(3)
+      .image(POINTS.welcomeSign.x, POINTS.welcomeSign.y, "welcome-sign")
+      .setScale(1.6)
       .setDepth(POINTS.welcomeSign.y + 46);
-    const wBody = this.add.rectangle(POINTS.welcomeSign.x, POINTS.welcomeSign.y + 40, 70, 18, 0, 0);
+    this.add
+      .image(POINTS.welcomeSign.x, POINTS.welcomeSign.y + 40, "shadow")
+      .setDepth(POINTS.welcomeSign.y + 42)
+      .setScale(1.2, 0.8);
+    const wBody = this.add.rectangle(POINTS.welcomeSign.x, POINTS.welcomeSign.y + 36, 76, 18, 0, 0);
     this.statics.add(wBody);
     wBody.setDepth(-200);
 
@@ -350,8 +513,8 @@ export class WorldScene extends Phaser.Scene {
     push({
       id: "welcome",
       x: POINTS.welcomeSign.x,
-      y: POINTS.welcomeSign.y,
-      r: 140,
+      y: POINTS.welcomeSign.y + 20,
+      r: 130,
       label: "Read the welcome sign",
       payload: { kind: "welcome", id: "welcome", title: "Welcome, Traveler!" },
     });
@@ -359,8 +522,8 @@ export class WorldScene extends Phaser.Scene {
     push({
       id: "about",
       x: POINTS.fountain.x,
-      y: POINTS.fountain.y + 60,
-      r: 230,
+      y: POINTS.fountain.y + 40,
+      r: 175,
       label: `About ${portfolio.name.split(" ")[0]}`,
       district: "about",
       payload: { kind: "about", id: "about", title: "About Me" },
@@ -371,9 +534,9 @@ export class WorldScene extends Phaser.Scene {
       push({
         id: `proj:${project.id}`,
         x: b.x,
-        y: b.y + 30,
-        r: 140,
-        label: `Read: ${project.title}`,
+        y: b.y + 50,
+        r: 130,
+        label: `Inspect: ${project.title}`,
         district: "projects",
         payload: { kind: "project", id: `proj:${project.id}`, title: project.title, projectId: project.id },
       });
@@ -384,9 +547,9 @@ export class WorldScene extends Phaser.Scene {
       push({
         id: `skill:${skill.id}`,
         x: s.x,
-        y: s.y,
-        r: 150,
-        label: `${skill.name} skills`,
+        y: s.y + 40,
+        r: 140,
+        label: `${skill.name} Skills`,
         district: "skills",
         payload: { kind: "skills", id: `skill:${skill.id}`, title: `${skill.name} Skills`, skillId: skill.id },
       });
@@ -426,20 +589,11 @@ export class WorldScene extends Phaser.Scene {
 
   private buildAtmosphere(): void {
     // --- Fountain water, anchored to the real sprite geometry ---
-    // fountain-clean.png is a 3-tier piece rendered at scale 0.72:
-    //   crown nub      ≈ fy - 108  (the small top tier)
-    //   upper lip      ≈ fy - 14   (rim of the middle basin)
-    //   pool surface   ≈ fy +30    (the big basin's water)
-    // v1's jet sprayed from the face at wild speeds and droplets died
-    // mid-fountain — the "random shower" artifact. This version tells
-    // the actual water story: a tight crown jet → pour over the lip →
-    // sheet down the face into the pool → ripples.
     const fountainX = POINTS.fountain.x;
     const fountainY = POINTS.fountain.y;
+    const fountainDepth = fountainY + 98;
 
-    // 1. Crown jet — small, slow, sparse: the water's source at the top.
-    //    Trajectory is tuned so droplets die INSIDE the crown tier and
-    //    never streak across the fountain's face.
+    // 1. Crown jet — water source at the top
     this.add
       .particles(fountainX, fountainY - 108, "droplet", {
         speed: { min: 70, max: 100 },
@@ -450,10 +604,9 @@ export class WorldScene extends Phaser.Scene {
         frequency: 55,
         blendMode: "ADD",
       })
-      .setDepth(fountainY + 172);
+      .setDepth(fountainDepth + 1);
 
-    // 2. The pour — droplets spill over the upper basin's lip and fall
-    //    down the fountain's face into the pool. Line zone = the lip.
+    // 2. The pour — droplets spill over the upper basin lip into pool
     this.add
       .particles(fountainX, fountainY - 14, "droplet", {
         speed: { min: 28, max: 50 },
@@ -469,9 +622,9 @@ export class WorldScene extends Phaser.Scene {
           source: zoneSource(new Phaser.Geom.Line(-58, 0, 58, 0)),
         },
       })
-      .setDepth(fountainY + 173);
+      .setDepth(fountainDepth + 2);
 
-    // 3. Pool shimmer — faint glints drifting on the pool surface
+    // 3. Pool shimmer — faint glints on pool surface
     this.add
       .particles(fountainX, fountainY + 30, "droplet", {
         speed: { min: 2, max: 8 },
@@ -486,13 +639,13 @@ export class WorldScene extends Phaser.Scene {
           source: zoneSource(new Phaser.Geom.Rectangle(-72, -18, 144, 40)),
         },
       })
-      .setDepth(fountainY + 174);
+      .setDepth(fountainDepth + 2);
 
-    // 4. Ripples — 3 expanding rings, staggered so they never sync up
+    // 4. Ripples — expanding rings inside the basin
     for (let i = 0; i < 3; i++) {
       const ring = this.add
         .image(fountainX, fountainY + 32, "ripple")
-        .setDepth(fountainY + 172)
+        .setDepth(fountainDepth + 1)
         .setAlpha(0);
       this.tweens.add({
         targets: ring,
@@ -504,6 +657,57 @@ export class WorldScene extends Phaser.Scene {
         ease: "Sine.easeOut",
       });
     }
+
+    // --- Garden Arboretum Atmosphere ---
+    // Frontend Sanctuary: drifting sakura & blossom petals
+    this.add
+      .particles(2404, 1220, "petal", {
+        speed: { min: 10, max: 28 },
+        angle: { min: 40, max: 130 },
+        lifespan: { min: 2400, max: 4000 },
+        scale: { start: 1, end: 0.2 },
+        alpha: { start: 0.85, end: 0 },
+        frequency: 420,
+        emitZone: {
+          type: "random",
+          source: zoneSource(new Phaser.Geom.Rectangle(-60, -30, 120, 60)),
+        },
+      })
+      .setDepth(2980);
+
+    // Backend Sanctuary: mystical cyan sparks
+    this.add
+      .particles(2640, 1500, "sparkle", {
+        speed: { min: 6, max: 22 },
+        lifespan: { min: 1600, max: 3000 },
+        scale: { start: 0.85, end: 0 },
+        tint: 0x00f5d4,
+        alpha: { start: 0.85, end: 0 },
+        blendMode: "ADD",
+        frequency: 400,
+        emitZone: {
+          type: "random",
+          source: zoneSource(new Phaser.Geom.Rectangle(-45, -30, 90, 60)),
+        },
+      })
+      .setDepth(2980);
+
+    // Tools & Craft Sanctuary: golden amber pollen fireflies
+    this.add
+      .particles(2404, 1780, "firefly", {
+        speed: { min: 8, max: 24 },
+        lifespan: { min: 2000, max: 3600 },
+        scale: { start: 0.9, end: 0.15 },
+        tint: 0xffd166,
+        alpha: { start: 0.85, end: 0 },
+        blendMode: "ADD",
+        frequency: 400,
+        emitZone: {
+          type: "random",
+          source: zoneSource(new Phaser.Geom.Rectangle(-50, -30, 100, 60)),
+        },
+      })
+      .setDepth(2980);
 
     // Fireflies drifting near the plaza and garden
     for (const [fx, fy] of [
