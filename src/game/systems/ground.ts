@@ -1,8 +1,10 @@
 import * as Phaser from "phaser";
 import {
+  COURIER_PLAZA,
   GROUND_CELL,
   GROUND_PADS,
   PATHS,
+  PATH_W,
   PLAZA,
   POINTS,
   SECRET_MARK,
@@ -179,6 +181,14 @@ export function buildGroundTexture(scene: Phaser.Scene): void {
   const gCourtyardR = S(80);
   fillCircle(gardenCourtyardMask, gCourtyardC.x, gCourtyardC.y, gCourtyardR);
 
+  // Courier Plaza / Telegraph Courtyard stone paving
+  const courierPlazaMask = new Uint8Array(GW * GH);
+  const cpX0 = S(COURIER_PLAZA.cx - COURIER_PLAZA.w / 2);
+  const cpY0 = S(COURIER_PLAZA.cy - COURIER_PLAZA.h / 2);
+  const cpW = S(COURIER_PLAZA.w);
+  const cpH = S(COURIER_PLAZA.h);
+  fillRoundRect(courierPlazaMask, cpX0, cpY0, cpW, cpH, S(COURIER_PLAZA.r));
+
   // Soft dirt pads under off-path props & garden shrines
   for (const p of GROUND_PADS) fillCircle(padMask, S(p.x), S(p.y), S(p.r));
 
@@ -280,6 +290,30 @@ export function buildGroundTexture(scene: Phaser.Scene): void {
         const ring = Math.abs(dist - inProjPad.r * 0.6) < 0.6;
         const tone = STONE_PALETTE[(hash2(x, y) * STONE_PALETTE.length) | 0];
         put(i, tone, curb ? 0.72 : ring ? 0.8 : 0.94 + hash2(x, y) * 0.08);
+        continue;
+      }
+
+      // 1c) Courier Plaza / Telegraph Courtyard stone paving
+      if (courierPlazaMask[idx]) {
+        const dx = x + 0.5 - S(COURIER_PLAZA.cx);
+        const dy = y + 0.5 - S(COURIER_PLAZA.cy);
+        const dist = Math.hypot(dx, dy);
+        // Central decorative postal rosette rings
+        const rosetteRing =
+          Math.abs(dist - S(52)) < 0.6 ||
+          Math.abs(dist - S(24)) < 0.6;
+        // North threshold where the walkway enters the plaza
+        const isNorthEntrance =
+          y < cpY0 + 1.8 && x >= S(1436) - 0.5 && x <= S(1436 + PATH_W) + 0.5;
+        // Curb border around the rounded courtyard
+        const curb =
+          !isNorthEntrance &&
+          (x < cpX0 + 1.2 || x > cpX0 + cpW - 1.4 ||
+           y < cpY0 + 1.2 || y > cpY0 + cpH - 1.4);
+        const grout = (x + y) % 4 === 0 || (x - y) % 4 === 0;
+        const tone = STONE_PALETTE[(hash2(x + 80, y + 80) * STONE_PALETTE.length) | 0];
+        const toneMul = curb ? 0.72 : rosetteRing ? 0.65 : grout ? 0.78 : 0.95 + hash2(x, y) * 0.08;
+        put(i, tone, toneMul);
         continue;
       }
 

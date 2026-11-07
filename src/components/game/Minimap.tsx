@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { onGameEvent } from "@/game/systems/events";
 import {
+  COURIER_PLAZA,
   PATHS,
   PLAZA,
   POINTS,
@@ -39,6 +40,14 @@ function drawStatic(ctx: CanvasRenderingContext2D): void {
     (PLAZA.cy - PLAZA.half) * K,
     PLAZA.half * 2 * K,
     PLAZA.half * 2 * K,
+  );
+
+  // Courier Plaza / Telegraph Courtyard
+  ctx.fillRect(
+    (COURIER_PLAZA.cx - COURIER_PLAZA.w / 2) * K,
+    (COURIER_PLAZA.cy - COURIER_PLAZA.h / 2) * K,
+    COURIER_PLAZA.w * K,
+    COURIER_PLAZA.h * K,
   );
 
   const dot = (x: number, y: number, r: number, color: string) => {

@@ -2,7 +2,21 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronDown, ExternalLink, Github, Linkedin, Mail, X } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  Download,
+  ExternalLink,
+  FileText,
+  Github,
+  Linkedin,
+  Mail,
+  MessageSquare,
+  Send,
+  X,
+} from "lucide-react";
+import { toast } from "sonner";
 import { portfolio } from "@/config/portfolio";
 import type { ZonePayload } from "@/game/types";
 
@@ -253,25 +267,267 @@ function Skills({ skillId }: { skillId: string }) {
   );
 }
 
-function Contact() {
-  const icon = (label: string) =>
-    label === "Email" ? <Mail className="h-4 w-4" /> : label === "GitHub" ? <Github className="h-4 w-4" /> : <Linkedin className="h-4 w-4" />;
+function Contact({ onOpenResumeSheet }: { onOpenResumeSheet?: () => void }) {
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [copiedDiscord, setCopiedDiscord] = useState(false);
+  const [topic, setTopic] = useState("Job Offer");
+  const [senderName, setSenderName] = useState("");
+  const [message, setMessage] = useState("");
+
+  const email = portfolio.contact.email;
+  const discord = portfolio.contact.discord;
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopiedEmail(true);
+      setTimeout(() => setCopiedEmail(false), 2000);
+      toast.success(`Copied email (${email}) to clipboard!`);
+    } catch {
+      toast.error("Could not access clipboard");
+    }
+  };
+
+  const handleCopyDiscord = async () => {
+    try {
+      await navigator.clipboard.writeText(discord);
+      setCopiedDiscord(true);
+      setTimeout(() => setCopiedDiscord(false), 2000);
+      toast.success(`Copied Discord (@${discord}) to clipboard!`);
+    } catch {
+      toast.error("Could not access clipboard");
+    }
+  };
+
+  const handleDownloadResume = () => {
+    const resumeText = `================================================================
+${portfolio.name.toUpperCase()} — ${portfolio.role.toUpperCase()}
+Location: ${portfolio.location} | Email: ${email} | Discord: @${discord}
+GitHub: https://github.com/YashShingan
+LinkedIn: https://www.linkedin.com/in/yashshingan
+Portfolio Game: https://yashshingan.github.io/portfolio-game/
+================================================================
+
+SUMMARY:
+${portfolio.about.bio.join("\n\n")}
+
+CORE SKILLS:
+${portfolio.skills.map((s) => `• ${s.name}: ${s.skills.join(", ")}`).join("\n")}
+
+FEATURED PROJECTS:
+${portfolio.projects
+  .map(
+    (p) => `• ${p.title} (${p.year})
+  ${p.description}
+  Tech Stack: ${p.tags.join(", ")}
+  Links: ${p.links.map((l) => `${l.label}: ${l.url}`).join(" | ")}`,
+  )
+  .join("\n\n")}
+
+CONTACT & DISPATCH:
+Email: ${email}
+Discord: @${discord}
+Open for: Full-time Roles, Freelance Collabs & Creative Tech Systems.
+================================================================`;
+
+    const blob = new Blob([resumeText], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Yash_Shingan_Resume.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("Resume document downloaded!");
+  };
+
+  const handleSendMail = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanName = senderName.trim() || "Traveler";
+    const subject = `[${topic}] Dispatch from ${cleanName}`;
+    const body = `${message.trim() || "Hi Yash, I came across your portfolio game and would love to connect!"}\n\n— Sent by ${cleanName} via Portfolio RPG Telegram`;
+    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoUrl;
+    toast.success("Opening your mail client...");
+  };
+
+  const iconFor = (label: string) => {
+    if (label === "Email") return <Mail className="h-4 w-4" />;
+    if (label === "GitHub") return <Github className="h-4 w-4" />;
+    if (label === "Discord") return <MessageSquare className="h-4 w-4" />;
+    return <Linkedin className="h-4 w-4" />;
+  };
+
   return (
     <div className="space-y-4">
-      <p className="text-sm leading-relaxed text-[#f4e8c8]">{portfolio.contact.blurb}</p>
-      <div className="grid gap-3">
+      {/* Retro Telegram Parchment Card */}
+      <div className="relative overflow-hidden border-2 border-[#a8862f] bg-[#1a140b] p-4 text-[#f4e8c8] shadow-inner">
+        {/* Airmail Ribbon Border */}
+        <div
+          className="absolute inset-x-0 top-0 h-1.5 opacity-80"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(45deg, #dc2626 0px, #dc2626 10px, #fef3c7 10px, #fef3c7 20px, #2563eb 20px, #2563eb 30px, #fef3c7 30px, #fef3c7 40px)",
+          }}
+        />
+
+        {/* Telegram Header */}
+        <div className="mt-1 flex flex-wrap items-center justify-between gap-2 border-b border-dashed border-[#856b28] pb-2.5">
+          <div>
+            <div className="font-pixel text-[9px] tracking-widest text-[#e8c170]">
+              TELEGRAPH DISPATCH · POSTAL STATION
+            </div>
+            <div className="mt-0.5 text-[10px] text-[#a89a76]">
+              ORIGIN: {portfolio.location.toUpperCase()} · ROUTE: PRIORITY
+            </div>
+          </div>
+          <div className="rounded border border-[#dc2626]/70 px-2 py-0.5 font-pixel text-[8px] tracking-wider text-[#f87171]">
+            EXPRESS
+          </div>
+        </div>
+
+        {/* Telegram Body Text */}
+        <div className="my-3 space-y-1.5 font-mono text-xs leading-relaxed text-[#fef3c7]">
+          <p className="border-l-2 border-[#e8c170] pl-2.5 italic">
+            &ldquo;{portfolio.contact.blurb} STOP.&rdquo;
+          </p>
+        </div>
+
+        {/* 1-Click Action Bar */}
+        <div className="mt-3 grid grid-cols-2 gap-2 pt-1 sm:grid-cols-4">
+          <button
+            type="button"
+            onClick={handleCopyEmail}
+            className="flex items-center justify-center gap-1.5 border border-[#856b28] bg-[#241c10] px-2 py-2 font-pixel text-[8px] sm:text-[9px] text-[#f5d78e] transition hover:border-[#e8c170] hover:bg-[#332717] active:scale-95"
+          >
+            {copiedEmail ? (
+              <Check className="h-3 w-3 text-[#86efac]" />
+            ) : (
+              <Copy className="h-3 w-3 text-[#e8c170]" />
+            )}
+            <span>{copiedEmail ? "COPIED" : "COPY EMAIL"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleCopyDiscord}
+            className="flex items-center justify-center gap-1.5 border border-[#856b28] bg-[#241c10] px-2 py-2 font-pixel text-[8px] sm:text-[9px] text-[#f5d78e] transition hover:border-[#e8c170] hover:bg-[#332717] active:scale-95"
+          >
+            {copiedDiscord ? (
+              <Check className="h-3 w-3 text-[#86efac]" />
+            ) : (
+              <Copy className="h-3 w-3 text-[#e8c170]" />
+            )}
+            <span>{copiedDiscord ? "COPIED" : "COPY DISCORD"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleDownloadResume}
+            className="flex items-center justify-center gap-1.5 border border-[#856b28] bg-[#241c10] px-2 py-2 font-pixel text-[8px] sm:text-[9px] text-[#f5d78e] transition hover:border-[#e8c170] hover:bg-[#332717] active:scale-95"
+          >
+            <Download className="h-3 w-3 text-[#e8c170]" />
+            <span>RESUME (TXT)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenResumeSheet}
+            className="flex items-center justify-center gap-1.5 border border-[#a8862f] bg-[#332717] px-2 py-2 font-pixel text-[8px] sm:text-[9px] text-[#fef08a] transition hover:border-[#fde68a] hover:bg-[#42331c] active:scale-95"
+          >
+            <FileText className="h-3 w-3 text-[#e8c170]" />
+            <span>RESUME (PDF)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Telegram Message Composer (Mailto) */}
+      <form
+        onSubmit={handleSendMail}
+        onKeyDown={(e) => e.stopPropagation()}
+        className="space-y-3 border-2 border-[#6b5b33] bg-[#141008] p-3.5"
+      >
+        <div className="flex items-center justify-between border-b border-[#3d321d] pb-1.5 font-pixel text-[9px] text-[#e8c170]">
+          <span className="flex items-center gap-1.5">
+            <Send className="h-3 w-3 text-[#e8c170]" /> QUICK TELEGRAM COMPOSER
+          </span>
+          <span className="text-[8px] text-[#8a7c58]">DIRECT MAILTO</span>
+        </div>
+
+        {/* Topic Selector */}
+        <div>
+          <label className="mb-1 block font-pixel text-[8px] text-[#a89a76]">SELECT TOPIC</label>
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+            {["Job Offer", "Project Collab", "Coffee Chat", "Say Hello"].map((t) => (
+              <button
+                type="button"
+                key={t}
+                onClick={() => setTopic(t)}
+                className={`border px-2 py-1 text-center font-pixel text-[8px] transition ${
+                  topic === t
+                    ? "border-[#e8c170] bg-[#e8c170]/20 text-[#f5d78e]"
+                    : "border-[#4a3f24] bg-[#1a140c] text-[#a89a76] hover:border-[#7a673b]"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Sender Name & Short Note */}
+        <div className="grid gap-2 sm:grid-cols-3">
+          <div className="sm:col-span-1">
+            <label className="mb-1 block font-pixel text-[8px] text-[#a89a76]">YOUR NAME</label>
+            <input
+              type="text"
+              value={senderName}
+              onChange={(e) => setSenderName(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              placeholder="e.g. Pixel / HR"
+              className="w-full border border-[#4a3f24] bg-[#0d0a06] px-2.5 py-1.5 text-xs text-[#f4e8c8] outline-none transition focus:border-[#e8c170]"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="mb-1 block font-pixel text-[8px] text-[#a89a76]">NOTE</label>
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              placeholder="Loved your game! Let's talk about..."
+              className="w-full border border-[#4a3f24] bg-[#0d0a06] px-2.5 py-1.5 text-xs text-[#f4e8c8] outline-none transition focus:border-[#e8c170]"
+            />
+          </div>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          className="flex w-full items-center justify-center gap-2 border-b-4 border-[#a8862f] bg-[#e8c170] py-2 font-pixel text-[10px] text-[#221d14] transition hover:bg-[#f5d78e] active:translate-y-[1px] active:border-b-2"
+        >
+          <Mail className="h-3.5 w-3.5" />
+          <span>DISPATCH TELEGRAM MESSAGE</span>
+        </button>
+      </form>
+
+      {/* All Links Cards */}
+      <div className="grid gap-2 sm:grid-cols-2">
         {portfolio.contact.links.map((l) => (
           <a
             key={l.url}
             href={l.url}
             target={l.url.startsWith("http") ? "_blank" : undefined}
             rel="noreferrer"
-            className="flex items-center gap-3 border-2 border-[#6b5b33] bg-[#141008] px-3 py-3 transition-colors hover:border-[#e8c170]"
+            className="flex items-center gap-2.5 border-2 border-[#4a3f24] bg-[#141008] px-3 py-2.5 transition-colors hover:border-[#e8c170]"
           >
-            <span className="text-[#e8c170]">{icon(l.label)}</span>
-            <span className="font-pixel text-[10px] text-[#f4e8c8]">{l.label}</span>
-            <span className="ml-auto truncate text-xs text-[#a89a76]">{l.value}</span>
-            <ExternalLink className="h-3.5 w-3.5 text-[#8a7c58]" />
+            <span className="text-[#e8c170]">{iconFor(l.label)}</span>
+            <div className="min-w-0">
+              <div className="font-pixel text-[9px] text-[#f4e8c8]">{l.label}</div>
+              <div className="truncate text-[11px] text-[#a89a76]">{l.value}</div>
+            </div>
+            <ExternalLink className="ml-auto h-3.5 w-3.5 shrink-0 text-[#8a7c58]" />
           </a>
         ))}
       </div>
@@ -327,7 +583,15 @@ const KIND_META: Record<ZonePayload["kind"], string> = {
   secret: "✨",
 };
 
-export function ZoneModal({ payload, onClose }: { payload: ZonePayload; onClose: () => void }) {
+export function ZoneModal({
+  payload,
+  onClose,
+  onOpenResumeSheet,
+}: {
+  payload: ZonePayload;
+  onClose: () => void;
+  onOpenResumeSheet?: () => void;
+}) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && payload.kind !== "dialogue" && payload.kind !== "secret") onClose();
@@ -337,7 +601,12 @@ export function ZoneModal({ payload, onClose }: { payload: ZonePayload; onClose:
   }, [onClose, payload.kind]);
 
   return (
-    <div className="absolute inset-0 z-30 flex items-end justify-center p-4 sm:items-center">
+    <div
+      className="absolute inset-0 z-30 flex items-end justify-center p-4 sm:items-center"
+      onKeyDown={(e) => {
+        if (e.key !== "Escape") e.stopPropagation();
+      }}
+    >
       <div
         className="absolute inset-0 bg-black/60"
         onClick={payload.kind === "dialogue" || payload.kind === "secret" ? undefined : onClose}
@@ -370,7 +639,7 @@ export function ZoneModal({ payload, onClose }: { payload: ZonePayload; onClose:
         {payload.kind === "about" && <About />}
         {payload.kind === "project" && <Project projectId={payload.projectId!} />}
         {payload.kind === "skills" && <Skills skillId={payload.skillId!} />}
-        {payload.kind === "contact" && <Contact />}
+        {payload.kind === "contact" && <Contact onOpenResumeSheet={onOpenResumeSheet} />}
         {payload.kind === "dialogue" && <Dialogue npcId={payload.npcId!} onClose={onClose} />}
         {payload.kind === "secret" && <Secret onClose={onClose} />}
 

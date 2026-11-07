@@ -618,6 +618,234 @@ export class BootScene extends Phaser.Scene {
     pk3.fillRect(26, 96, 44, 3);
     pk3.generateTexture("proj-kiosk-3", 96, 112);
     pk3.destroy();
+
+    // Footstep dust puff (tiny retro particle)
+    const dp = this.make.graphics({ x: 0, y: 0 }, false);
+    dp.fillStyle(0xd4c4a8, 0.85);
+    dp.fillCircle(3, 3, 2.5);
+    dp.fillStyle(0xfff6e6, 0.95);
+    dp.fillCircle(2.5, 2.5, 1);
+    dp.generateTexture("dust-puff", 6, 6);
+    dp.destroy();
+
+    // Autumn drifting leaf (screen atmosphere)
+    const lf = this.make.graphics({ x: 0, y: 0 }, false);
+    lf.fillStyle(0xd97706, 0.9);
+    lf.fillEllipse(5, 4, 8, 5);
+    lf.fillStyle(0xfbbf24, 0.95);
+    lf.fillRect(3, 3, 3, 2);
+    lf.fillStyle(0x78350f, 0.8);
+    lf.fillRect(0, 4, 2, 1);
+    lf.generateTexture("autumn-leaf", 10, 8);
+    lf.destroy();
+
+    // Courier letter / telegram particle (Courier Plaza atmosphere)
+    const lp = this.make.graphics({ x: 0, y: 0 }, false);
+    lp.fillStyle(0xfef3c7, 0.95);
+    lp.fillRect(1, 1, 8, 6);
+    lp.lineStyle(1, 0xb45309, 0.6);
+    lp.strokeRect(1, 1, 8, 6);
+    lp.fillStyle(0xdc2626, 1);
+    lp.fillCircle(5, 4, 1.5);
+    lp.generateTexture("letter-particle", 10, 8);
+    lp.destroy();
+
+    // Ornate Post Station (detailed retro mailbox with stacked parcels and brass trim)
+    const ps = this.make.graphics({ x: 0, y: 0 }, false);
+    // Flagstone base
+    ps.fillStyle(0x3f3f46, 1);
+    ps.fillRoundedRect(6, 56, 60, 10, 3);
+    ps.fillStyle(0x52525b, 1);
+    ps.fillRect(8, 56, 56, 3);
+    // Heavy post pillar
+    ps.fillStyle(0x27272a, 1);
+    ps.fillRect(20, 42, 10, 15);
+    ps.fillStyle(0x3f3f46, 1);
+    ps.fillRect(21, 42, 3, 15);
+    // Mailbox casing (crimson & rounded dome)
+    ps.fillStyle(0x991b1b, 1);
+    ps.fillRoundedRect(10, 14, 30, 32, 6);
+    ps.fillStyle(0xb91c1c, 1);
+    ps.fillRoundedRect(12, 16, 26, 8, 4);
+    ps.fillStyle(0x7f1d1d, 1);
+    ps.fillRect(10, 40, 30, 6);
+    // Polished brass trim & postal slot
+    ps.fillStyle(0xf59e0b, 1);
+    ps.fillRect(15, 20, 20, 5);
+    ps.fillStyle(0x451a03, 1);
+    ps.fillRect(17, 23, 16, 2);
+    // Brass postal horn insignia
+    ps.fillStyle(0xfbbf24, 1);
+    ps.fillCircle(25, 32, 4);
+    ps.fillStyle(0x991b1b, 1);
+    ps.fillCircle(25, 32, 2.5);
+    ps.fillStyle(0xfbbf24, 1);
+    ps.fillRect(21, 30, 3, 4);
+    ps.fillRect(24, 35, 6, 2);
+    // Collection schedule brass plate
+    ps.fillStyle(0xd97706, 1);
+    ps.fillRect(18, 38, 14, 4);
+    ps.fillStyle(0xffffff, 0.85);
+    ps.fillRect(20, 39, 10, 2);
+    // Stack of wooden & kraft packages
+    ps.fillStyle(0xd4a373, 1);
+    ps.fillRect(40, 38, 24, 18);
+    ps.fillStyle(0xbc6c25, 1);
+    ps.fillRect(40, 38, 4, 18);
+    ps.fillStyle(0x582f0e, 1);
+    ps.fillRect(40, 46, 24, 2); // horizontal twine
+    ps.fillRect(52, 38, 2, 18); // vertical twine
+    ps.fillStyle(0xdc2626, 1);
+    ps.fillCircle(53, 47, 2); // wax seal
+    // Top parchment package
+    ps.fillStyle(0xfaedcd, 1);
+    ps.fillRect(44, 26, 18, 13);
+    ps.fillStyle(0xe9edc9, 1);
+    ps.fillRect(44, 26, 3, 13);
+    ps.fillStyle(0x582f0e, 1);
+    ps.fillRect(44, 32, 18, 2);
+    ps.fillRect(52, 26, 2, 13);
+    // Green delivery tag
+    ps.fillStyle(0x2d6a4f, 1);
+    ps.fillRect(42, 34, 4, 6);
+    // Leaning burlap mail sack
+    ps.fillStyle(0xa3b18a, 1);
+    ps.fillEllipse(36, 48, 14, 12);
+    ps.fillStyle(0x588157, 1);
+    ps.fillEllipse(36, 44, 8, 5);
+    // Hanging brass lantern bracket
+    ps.fillStyle(0xd97706, 1);
+    ps.fillRect(4, 10, 8, 2);
+    ps.fillRect(4, 10, 2, 6);
+    ps.fillStyle(0xb45309, 1);
+    ps.fillRect(2, 16, 6, 3);
+    ps.fillStyle(0xfde68a, 1);
+    ps.fillRect(3, 19, 4, 6);
+    ps.fillStyle(0xffffff, 1);
+    ps.fillRect(4, 20, 2, 4);
+    ps.generateTexture("post-station", 72, 68);
+    ps.destroy();
+
+    // Warm ground halo beneath post station
+    const postH = this.make.graphics({ x: 0, y: 0 }, false);
+    postH.fillStyle(0xf59e0b, 0.28);
+    postH.fillEllipse(36, 14, 68, 24);
+    postH.fillStyle(0xfde68a, 0.45);
+    postH.fillEllipse(36, 14, 40, 12);
+    postH.generateTexture("post-halo", 72, 28);
+    postH.destroy();
+
+    // Recruiter Kiosk & Desk for Pixel
+    const rk = this.make.graphics({ x: 0, y: 0 }, false);
+    // Desk front panel
+    rk.fillStyle(0x451a03, 1);
+    rk.fillRoundedRect(8, 22, 56, 30, 4);
+    rk.fillStyle(0x78350f, 1);
+    rk.fillRoundedRect(12, 26, 48, 22, 3);
+    // Brass corner brackets
+    rk.fillStyle(0xf59e0b, 1);
+    rk.fillRect(12, 26, 4, 4);
+    rk.fillRect(56, 26, 4, 4);
+    rk.fillRect(12, 44, 4, 4);
+    rk.fillRect(56, 44, 4, 4);
+    // Polished mahogany top
+    rk.fillStyle(0x78350f, 1);
+    rk.fillRect(6, 18, 60, 7);
+    rk.fillStyle(0x9a3412, 1);
+    rk.fillRect(6, 18, 60, 2);
+    // Green desk blotter mat
+    rk.fillStyle(0x14532d, 1);
+    rk.fillRect(18, 19, 34, 5);
+    // Mini standing easel sign
+    rk.fillStyle(0x9a3412, 1);
+    rk.fillRoundedRect(44, 28, 24, 18, 3);
+    rk.lineStyle(1, 0xf5c96b, 1);
+    rk.strokeRoundedRect(44, 28, 24, 18, 3);
+    rk.fillStyle(0xfef08a, 1);
+    // Pixel briefcase icon
+    rk.fillRect(52, 32, 8, 6);
+    rk.fillRect(54, 30, 4, 2);
+    rk.fillStyle(0x9a3412, 1);
+    rk.fillRect(55, 33, 2, 4);
+    // Text bars
+    rk.fillStyle(0xfef08a, 0.9);
+    rk.fillRect(48, 41, 16, 2);
+    // Banker's desk lamp
+    rk.fillStyle(0xd97706, 1);
+    rk.fillRect(12, 10, 2, 9);
+    rk.fillRect(10, 18, 6, 2);
+    rk.fillStyle(0x059669, 1);
+    rk.fillRoundedRect(8, 7, 12, 5, 2);
+    rk.fillStyle(0xfef08a, 1);
+    rk.fillRect(10, 11, 8, 2);
+    // Steaming coffee mug
+    rk.fillStyle(0xf8fafc, 1);
+    rk.fillRect(22, 15, 6, 6);
+    rk.fillRect(20, 16, 2, 4); // handle
+    rk.fillStyle(0x451a03, 1);
+    rk.fillRect(23, 16, 4, 2);
+    // Steam flecks
+    rk.fillStyle(0xffffff, 0.7);
+    rk.fillRect(24, 12, 2, 2);
+    rk.fillRect(25, 9, 2, 2);
+    // Resume folder & sheets
+    rk.fillStyle(0x2563eb, 1);
+    rk.fillRect(32, 18, 12, 3);
+    rk.fillStyle(0xf8fafc, 1);
+    rk.fillRect(33, 16, 10, 3);
+    rk.fillStyle(0xd97706, 1);
+    rk.fillRect(45, 17, 6, 1); // pen
+    rk.generateTexture("recruiter-kiosk", 72, 56);
+    rk.destroy();
+
+    // Twin Brass Courier Street Lamp
+    const clamp = this.make.graphics({ x: 0, y: 0 }, false);
+    clamp.fillStyle(0x27272a, 1);
+    clamp.fillRect(6, 56, 12, 8);
+    clamp.fillStyle(0xd97706, 1);
+    clamp.fillRect(7, 54, 10, 3);
+    clamp.fillStyle(0x18181b, 1);
+    clamp.fillRect(10, 22, 4, 32);
+    clamp.fillStyle(0xf59e0b, 1);
+    clamp.fillRect(10, 36, 4, 2); // brass ring
+    clamp.fillRect(10, 48, 4, 2); // brass ring
+    clamp.fillStyle(0xd97706, 1);
+    clamp.fillRect(5, 8, 14, 4); // lamp cap
+    clamp.fillRect(8, 4, 8, 4); // spire
+    clamp.fillStyle(0xffedd5, 1);
+    clamp.fillRect(6, 12, 12, 10); // amber glass
+    clamp.fillStyle(0xffffff, 1);
+    clamp.fillRect(8, 14, 8, 6);
+    clamp.fillStyle(0x18181b, 1);
+    clamp.fillRect(6, 21, 12, 3); // base
+    clamp.generateTexture("courier-lamp", 24, 64);
+    clamp.destroy();
+
+    // Courier Park Bench with dropped letter
+    const cbn = this.make.graphics({ x: 0, y: 0 }, false);
+    cbn.fillStyle(0x1e2722, 1);
+    cbn.fillRect(6, 18, 4, 16);
+    cbn.fillRect(46, 18, 4, 16);
+    cbn.fillStyle(0xd97706, 1);
+    cbn.fillRect(4, 12, 6, 4); // brass armrest
+    cbn.fillRect(46, 12, 6, 4);
+    for (const sy of [4, 8, 12]) {
+      cbn.fillStyle(0x653b1b, 1);
+      cbn.fillRect(8, sy, 40, 3);
+      cbn.fillStyle(0x8c5226, 1);
+      cbn.fillRect(8, sy, 40, 1);
+    }
+    cbn.fillStyle(0x653b1b, 1);
+    cbn.fillRect(4, 18, 48, 8);
+    cbn.fillStyle(0x8c5226, 1);
+    cbn.fillRect(6, 19, 44, 3);
+    // Dropped envelope on seat
+    cbn.fillStyle(0xfef3c7, 1);
+    cbn.fillRect(24, 18, 10, 6);
+    cbn.fillStyle(0xdc2626, 1);
+    cbn.fillCircle(29, 21, 1.5);
+    cbn.generateTexture("courier-bench", 56, 36);
+    cbn.destroy();
   }
 
   private createAnimations(): void {

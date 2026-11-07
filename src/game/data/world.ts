@@ -38,20 +38,27 @@ export interface PathRect {
 export const PATHS: PathRect[] = [
   // 4 spokes from the plaza edges outward
   { x: 1436, y: 420, w: PATH_W, h: 600, horizontal: false }, // north
-  { x: 1436, y: 1980, w: PATH_W, h: 600, horizontal: false }, // south
+  { x: 1436, y: 1980, w: PATH_W, h: 250, horizontal: false }, // south: leads directly into Courier Plaza
   { x: 420, y: 1436, w: 600, h: PATH_W, horizontal: true }, // west
   { x: 1980, y: 1436, w: 700, h: PATH_W, horizontal: true }, // east (leads through skill garden to east sanctuary)
   // Projects walkway (north district)
   { x: 900, y: 380, w: 1200, h: PATH_W, horizontal: true },
   // Skills walkway (east district, connects north and south sanctuaries)
   { x: 2340, y: 1220, w: PATH_W, h: 560, horizontal: false },
-  // Contact walkway (south district)
-  { x: 1200, y: 2350, w: 600, h: PATH_W, horizontal: true },
   // Secret trail — narrower, branches off the projects walkway
   // and dead-ends at a hidden chest clearing in the woods
   { x: 2100, y: 380, w: 600, h: 64, horizontal: true },
   { x: 2636, y: 380, w: 64, h: 320, horizontal: false },
 ];
+
+/** Courier Plaza / Telegraph Courtyard (south district) */
+export const COURIER_PLAZA = {
+  cx: 1500,
+  cy: 2340,
+  w: 400,
+  h: 260,
+  r: 16,
+};
 
 /** Zones that must stay clear of random decoration */
 export const CLEAR_ZONES = PATHS.map((p) => ({
@@ -66,13 +73,12 @@ export const CLEAR_ZONES = PATHS.map((p) => ({
   { x: 860, y: 200, w: 1340, h: 440 },
   // skills garden sanctuary area (spacious botanical courtyard)
   { x: 2180, y: 1100, w: 580, h: 780 },
-  // contact area
-  { x: 1140, y: 2290, w: 720, h: 340 },
+  // Courier Plaza / Contact courtyard
+  { x: 1260, y: 2170, w: 480, h: 330 },
   // secret chest clearing (around the trail's dead end)
   { x: 2520, y: 480, w: 400, h: 360 },
   // NPC spots
   { x: 560, y: 1330, w: 280, h: 240 },
-  { x: 1490, y: 2000, w: 280, h: 240 },
   // spawn area
   { x: 320, y: 1360, w: 240, h: 280 },
 ]);
@@ -95,11 +101,11 @@ export const SKILL_PATCHES = [
 export const POINTS = {
   welcomeSign: { x: 560, y: 1330 },
   fountain: { x: PLAZA.cx, y: PLAZA.cy },
-  mailbox: { x: 1500, y: 2414 },
+  mailbox: { x: 1450, y: 2350 },
   // tucked at the end of the secret trail — actually hidden now
   chest: { x: 2668, y: 640 },
   npcOldOcto: { x: 700, y: 1450 },
-  npcPixel: { x: 1630, y: 2110 },
+  npcPixel: { x: 1570, y: 2320 },
 };
 
 /** Ground pixel scale: 1 ground texel = GROUND_CELL world px */
@@ -109,7 +115,6 @@ export const GROUND_CELL = 8;
 export const GROUND_PADS = [
   { x: POINTS.welcomeSign.x, y: POINTS.welcomeSign.y + 44, r: 66 },
   { x: POINTS.npcOldOcto.x, y: POINTS.npcOldOcto.y + 26, r: 74 },
-  { x: POINTS.npcPixel.x, y: POINTS.npcPixel.y + 26, r: 74 },
   // Botanical garden pads under each shrine
   { x: 2404, y: 1220, r: 80 },
   { x: 2640, y: 1500, r: 80 },
@@ -136,7 +141,7 @@ export const LABELS = [
   { text: "PROJECTS", x: 1500, y: 220 },
   { text: "ABOUT", x: 1500, y: 1230 },
   { text: "SKILLS GARDEN", x: 2404, y: 1110 },
-  { text: "CONTACT", x: 1500, y: 2300 },
+  { text: "CONTACT", x: 1500, y: 2180 },
 ];
 
 /** Secret trail branch hint — pale chevrons painted into the ground */

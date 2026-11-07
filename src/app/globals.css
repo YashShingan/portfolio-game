@@ -225,3 +225,60 @@
   background: #6b5b33;
   border: 2px solid #141008;
 }
+
+/* Print Styles for Executive Resume Sheet */
+@media print {
+  /* Hide non-resume UI: Phaser game canvas, HUD chips, mobile joysticks, action buttons */
+  canvas,
+  .no-print,
+  .pixel-chip {
+    display: none !important;
+  }
+
+  body,
+  html {
+    background: #ffffff !important;
+    color: #111827 !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Unconstrain modal bounds so multi-page printing works without scroll clipping */
+  .printable-resume-dialog {
+    position: static !important;
+    display: block !important;
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-height: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #111827 !important;
+    overflow: visible !important;
+  }
+
+  .printable-resume-body {
+    overflow: visible !important;
+    max-height: none !important;
+    color: #111827 !important;
+    padding: 0 !important;
+  }
+
+  .printable-resume-body * {
+    color: #111827 !important;
+    background: transparent !important;
+    border-color: #e5e7eb !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .printable-card {
+    border: 1px solid #d1d5db !important;
+    background: #f9fafb !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-bottom: 1rem !important;
+  }
+}

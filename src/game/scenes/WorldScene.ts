@@ -54,6 +54,7 @@ const zoneSource = (shape: Phaser.Geom.Line | Phaser.Geom.Rectangle) =>
 export class WorldScene extends Phaser.Scene {
   private player!: Player;
   private statics!: Phaser.Physics.Arcade.StaticGroup;
+  private leafEmitter?: Phaser.GameObjects.Particles.ParticleEmitter;
   private npcs: NPC[] = [];
   private interactables: Interactable[] = [];
   private activeId: string | null = null;
@@ -126,9 +127,13 @@ export class WorldScene extends Phaser.Scene {
 
     // React → game commands
     this.offBusCleanups.push(
+      onGameEvent("pg:zone-open", () => {
+        this.input.keyboard?.clearCaptures();
+      }),
       onGameEvent("pg:zone-close", () => {
         gameRuntime.modalOpen = false;
         audio.close();
+        this.input.keyboard?.addCapture("W,A,S,D,UP,DOWN,LEFT,RIGHT,E");
       }),
     );
 
@@ -136,6 +141,7 @@ export class WorldScene extends Phaser.Scene {
       this.offBusCleanups.forEach((off) => off());
       this.scale.off("resize");
       window.removeEventListener("keydown", this.konamiListener);
+      this.player?.destroy();
       ghosts.leave();
     });
 
@@ -436,17 +442,136 @@ export class WorldScene extends Phaser.Scene {
       });
     });
 
-    // --- Mailbox (Contact), procedural like v1 ---
-    const m = this.add.graphics().setDepth(POINTS.mailbox.y + 40);
-    m.fillStyle(0x666666, 1);
-    m.fillRect(POINTS.mailbox.x - 5, POINTS.mailbox.y - 10, 10, 46);
-    m.fillStyle(0xcc3333, 1);
-    m.fillRoundedRect(POINTS.mailbox.x - 22, POINTS.mailbox.y - 42, 44, 34, 6);
-    m.fillStyle(0x992222, 1);
-    m.fillRect(POINTS.mailbox.x - 22, POINTS.mailbox.y - 42, 44, 8);
-    const mBody = this.add.rectangle(POINTS.mailbox.x, POINTS.mailbox.y + 14, 48, 34, 0, 0);
+    // --- Courier Plaza / Telegraph Courtyard (Contact District) ---
+    // 1. Ornate Post Station (Upgraded Mailbox & Parcel Depot)
+    const mbX = POINTS.mailbox.x;
+    const mbY = POINTS.mailbox.y;
+    this.add
+      .image(mbX, mbY + 30, "shadow")
+      .setScale(1.4, 0.9)
+      .setDepth(mbY + 24);
+    const postHalo = this.add
+      .image(mbX, mbY + 32, "post-halo")
+      .setDepth(mbY + 25)
+      .setAlpha(0.65);
+    this.tweens.add({
+      targets: postHalo,
+      alpha: { from: 0.4, to: 0.85 },
+      scaleX: { from: 0.95, to: 1.08 },
+      duration: 1800,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+
+    this.add.image(mbX, mbY, "post-station").setDepth(mbY + 34);
+
+    const mBody = this.add.rectangle(mbX, mbY + 20, 64, 24, 0, 0);
     this.statics.add(mBody);
     mBody.setDepth(-200);
+
+    // Warm lantern glow on the post station bracket
+    const postGlow = this.add
+      .circle(mbX - 26, mbY - 14, 22, 0xffd166, 0.22)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(mbY + 36);
+    this.tweens.add({
+      targets: postGlow,
+      alpha: { from: 0.14, to: 0.32 },
+      duration: 1200,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+
+    // Floating illuminated Post Station badge
+    const mBadge = this.add.container(mbX, mbY - 54).setDepth(2990);
+    const mPlaqueW = 144;
+    const mBadgeBg = this.add
+      .graphics()
+      .fillStyle(0x141008, 0.94)
+      .fillRoundedRect(-mPlaqueW / 2, -18, mPlaqueW, 36, 8)
+      .lineStyle(2, 0xef4444, 0.95)
+      .strokeRoundedRect(-mPlaqueW / 2, -18, mPlaqueW, 36, 8);
+    const mIcon = this.add.text(-mPlaqueW / 2 + 18, 0, "📮", { fontSize: "18px" }).setOrigin(0.5);
+    const mTitle = this.add
+      .text(-mPlaqueW / 2 + 34, 0, "Post Station", {
+        fontFamily: pixelFont(),
+        fontSize: "11px",
+        color: "#fecaca",
+      })
+      .setOrigin(0, 0.5)
+      .setResolution(2);
+    mBadge.add([mBadgeBg, mIcon, mTitle]);
+    this.tweens.add({
+      targets: mBadge,
+      y: mbY - 62,
+      duration: 1600,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+
+    // 2. Pixel's Recruiter Kiosk & Coffee Desk Setup
+    const pkX = POINTS.npcPixel.x;
+    const pkY = POINTS.npcPixel.y;
+    this.add
+      .image(pkX, pkY + 22, "shadow")
+      .setScale(1.4, 0.8)
+      .setDepth(pkY + 18);
+    this.add.image(pkX, pkY, "recruiter-kiosk").setDepth(pkY + 30);
+    const pkBody = this.add.rectangle(pkX, pkY + 14, 62, 20, 0, 0);
+    this.statics.add(pkBody);
+    pkBody.setDepth(-200);
+
+    // Banker's lamp soft green/emerald glow
+    const lampGlow = this.add
+      .circle(pkX - 22, pkY - 12, 22, 0x34d399, 0.2)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(pkY + 32);
+    this.tweens.add({
+      targets: lampGlow,
+      alpha: { from: 0.12, to: 0.28 },
+      duration: 1400,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+
+    // 3. Twin Brass Courier Plaza Street Lanterns
+    const courierLamps = [
+      { x: 1400, y: 2210 },
+      { x: 1600, y: 2210 },
+    ];
+    courierLamps.forEach((lamp) => {
+      this.add.image(lamp.x, lamp.y, "courier-lamp").setDepth(lamp.y + 34);
+      this.add.image(lamp.x, lamp.y + 30, "shadow").setScale(0.5, 0.4).setDepth(lamp.y + 28);
+      const lBody = this.add.rectangle(lamp.x, lamp.y + 28, 16, 12, 0, 0);
+      this.statics.add(lBody);
+      lBody.setDepth(-200);
+
+      const lampHalo = this.add
+        .circle(lamp.x, lamp.y - 14, 38, 0xffd166, 0.2)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(lamp.y + 35);
+      this.tweens.add({
+        targets: lampHalo,
+        alpha: { from: 0.12, to: 0.3 },
+        duration: 1700 + Math.random() * 500,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut",
+      });
+    });
+
+    // 4. Wooden Courier Bench
+    const benchX = 1350;
+    const benchY = 2350;
+    this.add.image(benchX, benchY, "courier-bench").setDepth(benchY + 20);
+    this.add.image(benchX, benchY + 16, "shadow").setScale(1, 0.7).setDepth(benchY + 14);
+    const cbnBody = this.add.rectangle(benchX, benchY + 10, 52, 18, 0, 0);
+    this.statics.add(cbnBody);
+    cbnBody.setDepth(-200);
 
     // --- Welcome sign ---
     this.add
@@ -504,7 +629,8 @@ export class WorldScene extends Phaser.Scene {
 
   private buildNpcs(): void {
     this.npcs.push(new NPC(this, portfolio.npcs[0], POINTS.npcOldOcto.x, POINTS.npcOldOcto.y, 70));
-    this.npcs.push(new NPC(this, portfolio.npcs[1], POINTS.npcPixel.x, POINTS.npcPixel.y, 110));
+    // Pixel is stationed at her charming recruiter kiosk with subtle desk pacing
+    this.npcs.push(new NPC(this, portfolio.npcs[1], POINTS.npcPixel.x, POINTS.npcPixel.y - 14, 24));
   }
 
   private buildInteractables(): void {
@@ -560,7 +686,7 @@ export class WorldScene extends Phaser.Scene {
       x: POINTS.mailbox.x,
       y: POINTS.mailbox.y,
       r: 150,
-      label: "Open the mailbox",
+      label: "Open the Post Station",
       district: "contact",
       payload: { kind: "contact", id: "contact", title: "Contact" },
     });
@@ -740,6 +866,40 @@ export class WorldScene extends Phaser.Scene {
         blendMode: "ADD",
       })
       .setDepth(2980);
+
+    // Courier Plaza: floating letters and dispatched telegrams in the breeze
+    this.add
+      .particles(1500, 2330, "letter-particle", {
+        speedX: { min: 8, max: 24 },
+        speedY: { min: -4, max: 12 },
+        rotate: { min: -18, max: 18 },
+        lifespan: { min: 2600, max: 4200 },
+        scale: { start: 0.9, end: 1.1 },
+        alpha: { start: 0.85, end: 0 },
+        frequency: 800,
+        emitZone: {
+          type: "random",
+          source: zoneSource(new Phaser.Geom.Rectangle(-160, -80, 320, 160)),
+        },
+      })
+      .setDepth(2980);
+
+    // Global: gentle windblown autumn leaves drifting across the active view
+    this.leafEmitter = this.add
+      .particles(SPAWN.x, SPAWN.y, "autumn-leaf", {
+        speedX: { min: 24, max: 54 },
+        speedY: { min: 14, max: 36 },
+        rotate: { min: 0, max: 360 },
+        lifespan: { min: 3600, max: 6200 },
+        scale: { min: 0.75, max: 1.15 },
+        alpha: { start: 0.8, end: 0 },
+        frequency: 550,
+        emitZone: {
+          type: "random",
+          source: zoneSource(new Phaser.Geom.Rectangle(-460, -360, 920, 720)),
+        },
+      })
+      .setDepth(2985);
   }
 
   // ------------------------------------------------------------------
@@ -750,6 +910,9 @@ export class WorldScene extends Phaser.Scene {
     const dt = Math.min(delta, 100) / 1000; // clamp tab-switch spikes
     this.npcs.forEach((n) => n.update());
     ghosts.update(dt);
+    if (this.leafEmitter && this.player?.sprite) {
+      this.leafEmitter.setPosition(this.player.sprite.x, this.player.sprite.y);
+    }
 
     // Poll E every frame (JustDown is edge-triggered and must be drained
     // every frame, otherwise a stale press could fire later).

@@ -125,13 +125,15 @@ export const portfolio = {
 
   contact: {
     emoji: "📮",
+    email: "yash@example.com",
+    discord: "yashshingan",
     blurb:
-      "Whether it's a role, a collab, or you just want to argue about the best Zelda game — my inbox is open.",
+      "Whether it's a full-time engineering role, an ambitious creative project, or a quick coffee chat — my telegram desk is always open.",
     links: [
-      // TODO(you): replace with your real email / LinkedIn
       { label: "Email", value: "yash@example.com", url: "mailto:yash@example.com" },
       { label: "GitHub", value: "@YashShingan", url: "https://github.com/YashShingan" },
-      { label: "LinkedIn", value: "Connect with me", url: "https://www.linkedin.com/" },
+      { label: "LinkedIn", value: "Connect on LinkedIn", url: "https://www.linkedin.com/in/yashshingan" },
+      { label: "Discord", value: "@yashshingan", url: "https://discord.com" },
     ],
   },
 
