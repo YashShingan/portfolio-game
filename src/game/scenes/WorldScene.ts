@@ -1,6 +1,11 @@
 import * as Phaser from "phaser";
 import { portfolio } from "@/config/portfolio";
-import { emitGameEvent, onGameEvent } from "@/game/systems/events";
+import {
+  emitGameEvent,
+  getLocalTimeMode,
+  onGameEvent,
+  type TimeMode,
+} from "@/game/systems/events";
 import { gameRuntime, pixelFont, sharedInput } from "@/game/systems/shared";
 import { unlock } from "@/game/systems/achievements";
 import { audio } from "@/game/systems/audio";
@@ -70,6 +75,12 @@ export class WorldScene extends Phaser.Scene {
   private tickAcc = 0;
   private lastPresence = 0;
   private lastFacing: "left" | "right" = "right";
+  private currentTimeMode: TimeMode = "day";
+  private ambientOverlay!: Phaser.GameObjects.Rectangle;
+  private ambientTween?: Phaser.Tweens.Tween;
+  private lampHalos: Phaser.GameObjects.Arc[] = [];
+  private fountainGlow?: Phaser.GameObjects.Arc;
+  private fireflyEmitters: Phaser.GameObjects.Particles.ParticleEmitter[] = [];
 
   constructor() {
     super("WorldScene");
@@ -91,6 +102,7 @@ export class WorldScene extends Phaser.Scene {
     this.buildNpcs();
     this.buildInteractables();
     this.buildAtmosphere();
+    this.buildAmbientLighting();
 
     // Player + colliders
     this.player = new Player(this, SPAWN.x, SPAWN.y);
@@ -116,17 +128,24 @@ export class WorldScene extends Phaser.Scene {
     this.konamiListener = (e: KeyboardEvent) => this.trackKonami(e.keyCode);
     window.addEventListener("keydown", this.konamiListener);
 
-    // THE resize fix: adjust zoom only. No rebuilds. Ever.
+    // THE resize fix: adjust zoom and screen-space overlay. No rebuilds. Ever.
     this.scale.on(
       "resize",
       (gs: Phaser.Structs.Size) => {
         this.cameras.main.setZoom(zoomFor(gs.width, gs.height));
+        this.updateAmbientOverlaySize(gs.width, gs.height);
       },
       this,
     );
 
     // React → game commands
     this.offBusCleanups.push(
+      onGameEvent("pg:time-mode", (d) => {
+        this.setTimeMode(d.mode, d.instant ?? false);
+      }),
+      onGameEvent("pg:fountain-toss", () => {
+        this.handleFountainToss();
+      }),
       onGameEvent("pg:zone-open", () => {
         this.input.keyboard?.clearCaptures();
       }),
@@ -141,6 +160,7 @@ export class WorldScene extends Phaser.Scene {
       this.offBusCleanups.forEach((off) => off());
       this.scale.off("resize");
       window.removeEventListener("keydown", this.konamiListener);
+      this.ambientTween?.stop();
       this.player?.destroy();
       ghosts.leave();
     });
@@ -232,19 +252,11 @@ export class WorldScene extends Phaser.Scene {
       b.setDepth(-200);
     });
 
-    // Fountain glow
-    const glow = this.add
+    // Fountain glow (depth 2975 to punch through ambient overlay)
+    this.fountainGlow = this.add
       .circle(POINTS.fountain.x, POINTS.fountain.y - 20, 80, 0xffffff, 0.12)
       .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(fountainDepth + 3);
-    this.tweens.add({
-      targets: glow,
-      alpha: { from: 0.07, to: 0.3 },
-      duration: 1100,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    });
+      .setDepth(2975);
 
     // --- Project Exhibition Showcases ---
     PROJECT_BOARDS.forEach((b, i) => {
@@ -384,15 +396,8 @@ export class WorldScene extends Phaser.Scene {
       const lampHalo = this.add
         .circle(lamp.x, lamp.y - 14, 38, 0xffe58f, 0.18)
         .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(lamp.y + 35);
-      this.tweens.add({
-        targets: lampHalo,
-        alpha: { from: 0.12, to: 0.28 },
-        duration: 1800 + Math.random() * 600,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-      });
+        .setDepth(2975);
+      this.lampHalos.push(lampHalo);
     });
 
     // The 3 Distinct Garden Sanctuaries (Frontend, Backend, Tools)
@@ -553,15 +558,8 @@ export class WorldScene extends Phaser.Scene {
       const lampHalo = this.add
         .circle(lamp.x, lamp.y - 14, 38, 0xffd166, 0.2)
         .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(lamp.y + 35);
-      this.tweens.add({
-        targets: lampHalo,
-        alpha: { from: 0.12, to: 0.3 },
-        duration: 1700 + Math.random() * 500,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-      });
+        .setDepth(2975);
+      this.lampHalos.push(lampHalo);
     });
 
     // 4. Wooden Courier Bench
@@ -819,7 +817,7 @@ export class WorldScene extends Phaser.Scene {
       .setDepth(2980);
 
     // Tools & Craft Sanctuary: golden amber pollen fireflies
-    this.add
+    const craftFireflies = this.add
       .particles(2404, 1780, "firefly", {
         speed: { min: 8, max: 24 },
         lifespan: { min: 2000, max: 3600 },
@@ -834,6 +832,7 @@ export class WorldScene extends Phaser.Scene {
         },
       })
       .setDepth(2980);
+    this.fireflyEmitters.push(craftFireflies);
 
     // Fireflies drifting near the plaza and garden
     for (const [fx, fy] of [
@@ -841,7 +840,7 @@ export class WorldScene extends Phaser.Scene {
       [PLAZA.cx + 420, PLAZA.cy + 430],
       [2450, 1980],
     ] as const) {
-      this.add
+      const e = this.add
         .particles(fx, fy, "firefly", {
           speed: { min: 8, max: 32 },
           lifespan: { min: 2600, max: 4600 },
@@ -852,6 +851,7 @@ export class WorldScene extends Phaser.Scene {
           blendMode: "ADD",
         })
         .setDepth(2980);
+      this.fireflyEmitters.push(e);
     }
 
     // Chest sparkle hint (subtle — for the observant)
@@ -900,6 +900,174 @@ export class WorldScene extends Phaser.Scene {
         },
       })
       .setDepth(2985);
+  }
+
+  private buildAmbientLighting(): void {
+    const w = this.scale.width;
+    const h = this.scale.height;
+    this.ambientOverlay = this.add
+      .rectangle(w / 2, h / 2, w, h, 0x000000, 0)
+      .setOrigin(0.5, 0.5)
+      .setScrollFactor(0)
+      .setDepth(2970);
+    this.updateAmbientOverlaySize(w, h);
+
+    const initialMode = getLocalTimeMode();
+    this.setTimeMode(initialMode, true);
+  }
+
+  private updateAmbientOverlaySize(width?: number, height?: number): void {
+    if (!this.ambientOverlay) return;
+    const w = width ?? this.scale.width;
+    const h = height ?? this.scale.height;
+    const zoom = this.cameras.main.zoom || 1;
+    this.ambientOverlay.setPosition(w / 2, h / 2);
+    this.ambientOverlay.setSize(w / zoom + 40, h / zoom + 40);
+  }
+
+  public getTimeMode(): TimeMode {
+    return this.currentTimeMode;
+  }
+
+  private setTimeMode(mode: TimeMode, instant = false): void {
+    this.currentTimeMode = mode;
+
+    // Day: fillColor: 0x000000, fillAlpha: 0.00
+    // Sunset: fillColor: 0xd95a2b, fillAlpha: 0.24
+    // Night: fillColor: 0x0a1128, fillAlpha: 0.46
+    const targetColor =
+      mode === "night" ? 0x0a1128 : mode === "sunset" ? 0xd95a2b : 0x000000;
+    const targetAlpha =
+      mode === "night" ? 0.46 : mode === "sunset" ? 0.24 : 0.00;
+
+    // Lamp halos (garden lamps & courier plaza lamps):
+    // Day: alpha -> 0 (off)
+    // Sunset: alpha -> 0.22
+    // Night: alpha -> 0.48 (glowing bright with BlendModes.ADD, depth >= 2975)
+    const targetLampAlpha =
+      mode === "night" ? 0.48 : mode === "sunset" ? 0.22 : 0;
+
+    // Fountain glow:
+    // Day: alpha -> 0.08
+    // Sunset: alpha -> 0.20
+    // Night: alpha -> 0.38 (depth >= 2975)
+    const targetFountainAlpha =
+      mode === "night" ? 0.38 : mode === "sunset" ? 0.20 : 0.08;
+
+    // Fireflies:
+    // Day: alpha / particle flow stopped or 0
+    // Sunset: slow gentle drift
+    // Night: fully active, luminous drift
+    const targetFireflyAlpha =
+      mode === "night" ? 1.0 : mode === "sunset" ? 0.45 : 0;
+    const fireflyFreq = mode === "night" ? 380 : 800;
+
+    if (instant) {
+      if (this.ambientTween) {
+        this.ambientTween.stop();
+        this.ambientTween = undefined;
+      }
+      this.ambientOverlay.setFillStyle(targetColor, targetAlpha);
+
+      this.lampHalos.forEach((halo) => {
+        this.tweens.killTweensOf(halo);
+        halo.setAlpha(targetLampAlpha);
+      });
+
+      if (this.fountainGlow) {
+        this.tweens.killTweensOf(this.fountainGlow);
+        this.fountainGlow.setAlpha(targetFountainAlpha);
+      }
+
+      this.fireflyEmitters.forEach((emitter) => {
+        this.tweens.killTweensOf(emitter);
+        emitter.setAlpha(targetFireflyAlpha);
+        if (mode === "day") {
+          emitter.stop();
+        } else {
+          emitter.start();
+          emitter.setFrequency(fireflyFreq);
+        }
+      });
+    } else {
+      if (this.ambientTween) {
+        this.ambientTween.stop();
+        this.ambientTween = undefined;
+      }
+
+      const startColor = this.ambientOverlay.fillColor;
+      const startAlpha = this.ambientOverlay.fillAlpha;
+      const startR = (startColor >> 16) & 0xff;
+      const startG = (startColor >> 8) & 0xff;
+      const startB = startColor & 0xff;
+
+      const endR = (targetColor >> 16) & 0xff;
+      const endG = (targetColor >> 8) & 0xff;
+      const endB = targetColor & 0xff;
+
+      const proxy = { progress: 0 };
+      this.ambientTween = this.tweens.add({
+        targets: proxy,
+        progress: 1,
+        duration: 900,
+        ease: "Sine.easeInOut",
+        onUpdate: () => {
+          const t = proxy.progress;
+          const r = Math.round(startR + (endR - startR) * t);
+          const g = Math.round(startG + (endG - startG) * t);
+          const b = Math.round(startB + (endB - startB) * t);
+          const a = startAlpha + (targetAlpha - startAlpha) * t;
+          const col = (r << 16) | (g << 8) | b;
+          this.ambientOverlay.setFillStyle(col, a);
+        },
+        onComplete: () => {
+          this.ambientOverlay.setFillStyle(targetColor, targetAlpha);
+          this.ambientTween = undefined;
+        },
+      });
+
+      this.lampHalos.forEach((halo) => {
+        this.tweens.killTweensOf(halo);
+        this.tweens.add({
+          targets: halo,
+          alpha: targetLampAlpha,
+          duration: 900,
+          ease: "Sine.easeInOut",
+        });
+      });
+
+      if (this.fountainGlow) {
+        this.tweens.killTweensOf(this.fountainGlow);
+        this.tweens.add({
+          targets: this.fountainGlow,
+          alpha: targetFountainAlpha,
+          duration: 900,
+          ease: "Sine.easeInOut",
+        });
+      }
+
+      this.fireflyEmitters.forEach((emitter) => {
+        this.tweens.killTweensOf(emitter);
+        if (mode === "day") {
+          this.tweens.add({
+            targets: emitter,
+            alpha: 0,
+            duration: 900,
+            ease: "Sine.easeInOut",
+            onComplete: () => emitter.stop(),
+          });
+        } else {
+          emitter.start();
+          emitter.setFrequency(fireflyFreq);
+          this.tweens.add({
+            targets: emitter,
+            alpha: targetFireflyAlpha,
+            duration: 900,
+            ease: "Sine.easeInOut",
+          });
+        }
+      });
+    }
   }
 
   // ------------------------------------------------------------------
@@ -1083,5 +1251,133 @@ export class WorldScene extends Phaser.Scene {
       })
       .setDepth(3100)
       .explode(60);
+  }
+
+  private ensureCoinTexture(): void {
+    if (this.textures.exists("fountain-coin")) return;
+    const cg = this.make.graphics({ x: 0, y: 0 }, false);
+    cg.fillStyle(0xd97706, 1);
+    cg.fillCircle(7, 7, 6);
+    cg.fillStyle(0xf5c96b, 1);
+    cg.fillCircle(7, 7, 5);
+    cg.fillStyle(0xfef08a, 1);
+    cg.fillCircle(5, 5, 2);
+    cg.lineStyle(1, 0x92400e, 0.9);
+    cg.strokeCircle(7, 7, 5);
+    cg.generateTexture("fountain-coin", 14, 14);
+    cg.destroy();
+  }
+
+  private handleFountainToss(): void {
+    this.ensureCoinTexture();
+
+    const targetX = 1500;
+    const targetY = 1532;
+
+    let startX = this.player?.sprite ? this.player.sprite.x : targetX;
+    let startY = this.player?.sprite ? this.player.sprite.y - 12 : targetY + 120;
+
+    const dist = Math.hypot(startX - targetX, startY - targetY);
+    if (dist > 280) {
+      const angle = Math.atan2(startY - targetY, startX - targetX);
+      startX = targetX + Math.cos(angle) * 180;
+      startY = targetY + Math.sin(angle) * 180;
+    }
+
+    const coin = this.add.image(startX, startY, "fountain-coin").setDepth(2980);
+
+    const duration = 650;
+    const apexHeight = 70;
+    const tossObj = { t: 0 };
+
+    this.tweens.add({
+      targets: tossObj,
+      t: 1,
+      duration,
+      ease: "Linear",
+      onUpdate: () => {
+        const t = tossObj.t;
+        const curX = startX + (targetX - startX) * t;
+        const baseLineY = startY + (targetY - startY) * t;
+        const arcOffset = 4 * apexHeight * t * (1 - t);
+        coin.setPosition(curX, baseLineY - arcOffset);
+        coin.setAngle(t * 720);
+        coin.setScale(1 + Math.sin(t * Math.PI) * 0.35, 1);
+      },
+      onComplete: () => {
+        coin.destroy();
+        this.splashFountainPool(targetX, targetY);
+      },
+    });
+  }
+
+  private splashFountainPool(x: number, y: number): void {
+    const fountainDepth = POINTS.fountain.y + 98;
+
+    // Expanding in-pool water ripples ("ripple" texture, scale 0.2 -> 1.8, alpha 0.9 -> 0)
+    const ripple = this.add
+      .image(x, y, "ripple")
+      .setDepth(fountainDepth + 3)
+      .setScale(0.2)
+      .setAlpha(0.9);
+
+    this.tweens.add({
+      targets: ripple,
+      scale: 1.8,
+      alpha: 0,
+      duration: 1000,
+      ease: "Sine.easeOut",
+      onComplete: () => ripple.destroy(),
+    });
+
+    const ripple2 = this.add
+      .image(x, y, "ripple")
+      .setDepth(fountainDepth + 3)
+      .setScale(0.15)
+      .setAlpha(0.75);
+
+    this.tweens.add({
+      targets: ripple2,
+      scale: 1.5,
+      alpha: 0,
+      delay: 140,
+      duration: 900,
+      ease: "Sine.easeOut",
+      onComplete: () => ripple2.destroy(),
+    });
+
+    // Splash particle bursts: water droplets ("droplet") and golden sparkles ("sparkle")
+    const dropSplash = this.add.particles(x, y, "droplet", {
+      speed: { min: 45, max: 135 },
+      angle: { min: 220, max: 320 },
+      gravityY: 300,
+      lifespan: { min: 450, max: 700 },
+      scale: { start: 0.7, end: 0.1 },
+      alpha: { start: 1, end: 0 },
+      tint: 0xaadcff,
+      blendMode: "ADD",
+      emitting: false,
+    });
+    dropSplash.setDepth(2980);
+    dropSplash.explode(20);
+
+    const sparkleSplash = this.add.particles(x, y, "sparkle", {
+      speed: { min: 30, max: 110 },
+      angle: { min: 210, max: 330 },
+      gravityY: 180,
+      lifespan: { min: 550, max: 900 },
+      scale: { start: 0.95, end: 0 },
+      alpha: { start: 1, end: 0 },
+      tint: 0xf5c96b,
+      blendMode: "ADD",
+      emitting: false,
+    });
+    sparkleSplash.setDepth(2981);
+    sparkleSplash.explode(14);
+
+    this.time.delayedCall(1200, () => {
+      dropSplash.destroy();
+      sparkleSplash.destroy();
+    });
   }
 }

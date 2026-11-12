@@ -15,6 +15,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: "bookworm", title: "Bookworm", desc: "Read every project noticeboard", emoji: "📚" },
   { id: "social", title: "Social Butterfly", desc: "Talked to every NPC in the world", emoji: "💬" },
   { id: "curious", title: "Curious Mind", desc: "Found what hides in the north-east", emoji: "💎" },
+  { id: "big-spender", title: "Big Spender", desc: "Tossed a lucky coin into the central fountain", emoji: "🪙" },
   { id: "konami", title: "Cheater Detected", desc: "↑↑↓↓←→←→BA", emoji: "🎮" },
 ];
 

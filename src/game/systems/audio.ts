@@ -229,6 +229,16 @@ class ChiptuneEngine {
     this.tone(NOTE.G5, t0 + 0.14, 0.5, "triangle", 0.026, this.sfxBus);
   }
 
+  /** Dual frequency sine ping with bright metallic chime decay — fountain coin toss. */
+  coin(): void {
+    if (!this.ctx || !this.sfxBus || !this.started) return;
+    const t0 = this.ctx.currentTime;
+    if (!Number.isFinite(t0)) return;
+    this.tone(987.77, t0, 0.09, "sine", 0.065, this.sfxBus, 0.002);
+    this.tone(1318.51, t0 + 0.065, 0.38, "sine", 0.08, this.sfxBus, 0.002);
+    this.tone(2637.02, t0 + 0.065, 0.2, "sine", 0.025, this.sfxBus, 0.002);
+  }
+
   // ---------- Mute ----------
 
   get isMuted(): boolean {

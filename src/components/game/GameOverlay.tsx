@@ -11,7 +11,10 @@ import {
   Github,
   Linkedin,
   Mail,
+  Moon,
   Printer,
+  Sun,
+  Sunset,
   Trophy,
   Volume2,
   VolumeX,
@@ -23,9 +26,16 @@ import { ZoneModal } from "@/components/game/ZoneModal";
 import { portfolio } from "@/config/portfolio";
 import { ACHIEVEMENTS, unlockedIds } from "@/game/systems/achievements";
 import { audio } from "@/game/systems/audio";
-import { emitGameEvent, onGameEvent } from "@/game/systems/events";
+import {
+  emitGameEvent,
+  getLocalTimeMode,
+  onGameEvent,
+  type TimeMode,
+} from "@/game/systems/events";
 import { gameRuntime, resetSharedState } from "@/game/systems/shared";
 import type { ZonePayload } from "@/game/types";
+
+export { getLocalTimeMode };
 
 /**
  * Full-screen game shell: mounts the Phaser game (client-only,
@@ -41,6 +51,11 @@ export function GameOverlay({ open, onClose }: { open: boolean; onClose: () => v
   const [ready, setReady] = useState(false);
   const [resumeModeOpen, setResumeModeOpen] = useState(false);
   const [muted, setMuted] = useState(() => audio.isMuted);
+  const [timeMode, setTimeMode] = useState<TimeMode>(() => getLocalTimeMode());
+  const timeModeRef = useRef<TimeMode>(timeMode);
+  useEffect(() => {
+    timeModeRef.current = timeMode;
+  }, [timeMode]);
   const [touch, setTouch] = useState(() => {
     if (typeof window === "undefined") return false;
     return (
@@ -103,7 +118,12 @@ export function GameOverlay({ open, onClose }: { open: boolean; onClose: () => v
       gameRef.current = createGame(containerRef.current);
     });
 
-    cleanups.push(onGameEvent("pg:ready", () => setReady(true)));
+    cleanups.push(
+      onGameEvent("pg:ready", () => {
+        setReady(true);
+        emitGameEvent("pg:time-mode", { mode: timeModeRef.current, instant: true });
+      }),
+    );
     cleanups.push(onGameEvent("pg:prompt", (d) => setPrompt(d.label)));
     cleanups.push(onGameEvent("pg:zone-open", (d) => setZone(d)));
     cleanups.push(onGameEvent("pg:presence", (d) => setPresence(d.count)));
@@ -153,6 +173,14 @@ export function GameOverlay({ open, onClose }: { open: boolean; onClose: () => v
 
   const toggleMute = useCallback(() => {
     setMuted(audio.toggleMute());
+  }, []);
+
+  const cycleTimeMode = useCallback(() => {
+    setTimeMode((prev) => {
+      const next: TimeMode = prev === "day" ? "sunset" : prev === "sunset" ? "night" : "day";
+      emitGameEvent("pg:time-mode", { mode: next, instant: false });
+      return next;
+    });
   }, []);
 
   if (!open) return null;
@@ -211,6 +239,17 @@ export function GameOverlay({ open, onClose }: { open: boolean; onClose: () => v
         )}
 
         <div className="pointer-events-auto flex gap-2">
+          <button
+            onClick={cycleTimeMode}
+            aria-label={`Current time of day: ${timeMode}. Click to switch.`}
+            title={`Lighting: ${timeMode.toUpperCase()} (Click to toggle)`}
+            className="hud-btn flex items-center gap-1.5"
+          >
+            {timeMode === "day" && <Sun className="h-4 w-4 text-[#f5c96b]" />}
+            {timeMode === "sunset" && <Sunset className="h-4 w-4 text-[#f97316]" />}
+            {timeMode === "night" && <Moon className="h-4 w-4 text-[#93c5fd]" />}
+            <span className="hidden font-pixel text-[8px] uppercase sm:inline">{timeMode}</span>
+          </button>
           <button
             onClick={toggleMute}
             aria-label={muted ? "Unmute sound" : "Mute sound"}

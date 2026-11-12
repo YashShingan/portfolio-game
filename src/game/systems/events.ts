@@ -1,5 +1,14 @@
 import type { AchievementDef, ZonePayload } from "@/game/types";
 
+export type TimeMode = "day" | "sunset" | "night";
+
+export function getLocalTimeMode(): TimeMode {
+  const hour = new Date().getHours();
+  if (hour >= 19 || hour < 6) return "night";
+  if (hour >= 17 && hour < 19) return "sunset";
+  return "day";
+}
+
 /**
  * Tiny typed event bus over window CustomEvents — the ONLY channel
  * between the Phaser game and React. No DOM queries inside the
@@ -18,6 +27,8 @@ export interface GameEventMap {
     y: number;
     ghosts: Array<{ id: string; x: number; y: number }>;
   };
+  "pg:time-mode": { mode: TimeMode; instant?: boolean };
+  "pg:fountain-toss": undefined;
 }
 
 export function emitGameEvent<K extends keyof GameEventMap>(

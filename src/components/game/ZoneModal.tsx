@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import {
   Check,
   ChevronDown,
+  Coins,
   Copy,
   Download,
   ExternalLink,
@@ -14,11 +15,16 @@ import {
   Mail,
   MessageSquare,
   Send,
+  Sparkles,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { portfolio } from "@/config/portfolio";
+import { unlock } from "@/game/systems/achievements";
+import { audio } from "@/game/systems/audio";
+import { emitGameEvent } from "@/game/systems/events";
 import type { ZonePayload } from "@/game/types";
+import { ArcadeMiniGame } from "./ArcadeMiniGame";
 
 /* ---------------------------------- bits ---------------------------------- */
 
@@ -178,6 +184,208 @@ function Welcome() {
   );
 }
 
+interface Fortune {
+  quote: string;
+  author: string;
+}
+
+const DEVELOPER_FORTUNES: Fortune[] = [
+  {
+    quote: "There are only two hard things in Computer Science: cache invalidation and naming things.",
+    author: "Phil Karlton",
+  },
+  {
+    quote: "It's not a bug, it's an undocumented feature.",
+    author: "Anonymous Sysadmin",
+  },
+  {
+    quote: "The code works on my machine. Therefore, we will ship your machine to production.",
+    author: "DevOps Oracle",
+  },
+  {
+    quote: "A git commit a day keeps the catastrophic merge conflicts away.",
+    author: "Ancient Git Proverb",
+  },
+  {
+    quote: "Before software can be reusable it first has to be usable.",
+    author: "Ralph Johnson",
+  },
+  {
+    quote: "Any code you haven't looked at for six months might as well have been written by someone else.",
+    author: "Eagleson's Law",
+  },
+  {
+    quote: "Deleted code is debugged code.",
+    author: "Jeff Sickel",
+  },
+  {
+    quote: "Walking on water and developing software from a specification are easy if both are frozen.",
+    author: "Edward V. Berard",
+  },
+  {
+    quote: "First, solve the problem. Then, write the code.",
+    author: "John Johnson",
+  },
+  {
+    quote: "There is nothing quite so permanent as a quick temporary workaround.",
+    author: "Senior Staff Engineer",
+  },
+  {
+    quote: "Always code as if the guy who ends up maintaining your code will be a violent psychopath who knows where you live.",
+    author: "John Woods",
+  },
+  {
+    quote: "A lucky commit awaits you. May your next pull request be approved without a single review comment.",
+    author: "Fountain Oracle",
+  },
+  {
+    quote: "The best error message is the one that never shows up.",
+    author: "Site Reliability Sage",
+  },
+  {
+    quote: "Simplicity is prerequisite for reliability.",
+    author: "Edsger W. Dijkstra",
+  },
+  {
+    quote: "May your queries be fast, your caches warm, and your p99 latency strictly sub-millisecond.",
+    author: "Database Guardian",
+  },
+  {
+    quote: "Good code is its own best documentation. As you're about to add a comment, ask yourself: How can I improve the code so that this comment isn't needed?",
+    author: "Steve McConnell",
+  },
+  {
+    quote: "The secret to 10x developer productivity: 8 hours of sleep and reading the actual error stack trace.",
+    author: "Pragmatic Octo",
+  },
+  {
+    quote: "You will soon discover that one missing semicolon that kept you awake until 3 AM.",
+    author: "Compiler Whisperer",
+  },
+  {
+    quote: "Premature optimization is the root of all evil (or at least 97% of it).",
+    author: "Donald Knuth",
+  },
+  {
+    quote: "In theory, there is no difference between theory and practice. In practice, there is.",
+    author: "Jan L. A. van de Snepscheut",
+  },
+  {
+    quote: "Weeks of programming can save you hours of planning.",
+    author: "Engineering Folklore",
+  },
+  {
+    quote: "Today's fortune: That flaky test in CI will pass on the third retry without changing a single line of code.",
+    author: "Pipeline Mystic",
+  },
+  {
+    quote: "Make it work, make it right, make it fast.",
+    author: "Kent Beck",
+  },
+  {
+    quote: "Beware of bugs in the above code; I have only proved it correct, not tried it.",
+    author: "Donald Knuth",
+  },
+];
+
+function FountainOfWisdom() {
+  const [currentFortune, setCurrentFortune] = useState<Fortune | null>(null);
+  const [tossCount, setTossCount] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleTossCoin = () => {
+    audio.coin();
+    emitGameEvent("pg:fountain-toss", undefined);
+    unlock("big-spender");
+
+    let next: Fortune;
+    do {
+      next = DEVELOPER_FORTUNES[Math.floor(Math.random() * DEVELOPER_FORTUNES.length)];
+    } while (DEVELOPER_FORTUNES.length > 1 && currentFortune && next.quote === currentFortune.quote);
+
+    setCurrentFortune(next);
+    setTossCount((c) => c + 1);
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 600);
+  };
+
+  return (
+    <div className="relative overflow-hidden border-2 border-[#a8862f] bg-[#1a140b] p-4 text-[#f4e8c8] shadow-inner">
+      {/* Decorative top water/gold ribbon */}
+      <div
+        className="absolute inset-x-0 top-0 h-1.5 opacity-80"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(45deg, #38bdf8 0px, #38bdf8 10px, #fef08a 10px, #fef08a 20px, #0284c7 20px, #0284c7 30px, #f59e0b 30px, #f59e0b 40px)",
+        }}
+      />
+
+      {/* Header */}
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-2 border-b border-dashed border-[#856b28] pb-2.5">
+        <div className="flex items-center gap-2">
+          <span className="text-xl">⛲</span>
+          <div>
+            <div className="font-pixel text-[9px] tracking-widest text-[#e8c170]">
+              FOUNTAIN OF WISDOM · WISHING WELL
+            </div>
+            <div className="mt-0.5 text-[10px] text-[#a89a76]">
+              CENTRAL PLAZA ORACLE · MAKE A WISH
+            </div>
+          </div>
+        </div>
+        {tossCount > 0 && (
+          <div className="flex items-center gap-1 rounded border border-[#856b28] bg-[#241c10] px-2 py-0.5 font-pixel text-[8px] text-[#fde68a]">
+            <span>🪙 TOSSES: {tossCount}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Oracle prompt or revealed fortune */}
+      <div className="my-3 min-h-16">
+        {currentFortune ? (
+          <motion.div
+            key={currentFortune.quote + tossCount}
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.25 }}
+            className="rounded border border-[#a8862f]/60 bg-[#120e07] p-3 shadow-md"
+          >
+            <div className="mb-1 flex items-center justify-between font-pixel text-[8px] text-[#e8c170]">
+              <span className="flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-[#fde047]" /> THE ORACLE SPEAKS:
+              </span>
+              <span className="text-[#856b28]">LUCKY COIN #{tossCount}</span>
+            </div>
+            <p className="border-l-2 border-[#e8c170] pl-2.5 italic text-sm text-[#fef08a] leading-relaxed">
+              &ldquo;{currentFortune.quote}&rdquo;
+            </p>
+            <div className="mt-1.5 text-right font-pixel text-[8px] text-[#cdb87e]">
+              — {currentFortune.author}
+            </div>
+          </motion.div>
+        ) : (
+          <p className="text-xs italic leading-relaxed text-[#cdb87e]">
+            Legend whispers that tossing a golden coin into the fountain grants crystal-clear compiler
+            insight and reveals ancient developer fortunes. Toss a coin to test your luck!
+          </p>
+        )}
+      </div>
+
+      {/* Interactive Toss Button */}
+      <button
+        type="button"
+        onClick={handleTossCoin}
+        className={`flex w-full items-center justify-center gap-2 border-b-4 border-[#a8862f] bg-[#e8c170] py-2.5 font-pixel text-[10px] text-[#221d14] transition-all hover:bg-[#f5d78e] active:translate-y-[2px] active:border-b-0 ${
+          isAnimating ? "scale-[0.98] ring-2 ring-[#fde047]" : ""
+        }`}
+      >
+        <Coins className="h-4 w-4 text-[#854d0e]" />
+        <span>🪙 TOSS A COIN INTO THE FOUNTAIN</span>
+      </button>
+    </div>
+  );
+}
+
 function About() {
   return (
     <div className="space-y-4">
@@ -197,6 +405,10 @@ function About() {
           {p}
         </p>
       ))}
+
+      {/* Fountain of Wisdom / Coin Toss Interactive Section */}
+      <FountainOfWisdom />
+
       <div className="border-2 border-[#6b5b33] bg-[#141008] p-3">
         <div className="mb-2 font-pixel text-[9px] text-[#e8c170]">FUN FACTS</div>
         <ul className="space-y-1.5">
@@ -227,6 +439,10 @@ function Project({ projectId }: { projectId: string }) {
         </div>
       </div>
       <p className="text-sm leading-relaxed text-[#f4e8c8]">{p.description}</p>
+
+      {/* Embedded 10-second Retro Arcade Mini-Game (Flappy Octo) for Project 0 */}
+      {projectId === "p0" && <ArcadeMiniGame />}
+
       <div className="flex flex-wrap gap-2">
         {p.tags.map((t) => (
           <TagChip key={t}>{t}</TagChip>
