@@ -50,7 +50,7 @@ function visitorId(): string {
   }
 }
 
-class GhostSystem {
+export class GhostSystem {
   private scene: Phaser.Scene | null = null;
   private es: EventSource | null = null;
   private ghosts = new Map<string, Ghost>();

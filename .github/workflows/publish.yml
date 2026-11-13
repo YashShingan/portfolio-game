@@ -1,0 +1,172 @@
+name: Publish Package
+
+on:
+  release:
+    types: [published]
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      registry:
+        description: 'Target package registry to publish to'
+        type: choice
+        required: true
+        default: 'both'
+        options:
+          - 'both'
+          - 'npm'
+          - 'github'
+      dry_run:
+        description: 'Execute publishing dry-run without uploading package'
+        type: boolean
+        required: false
+        default: false
+      tag:
+        description: 'npm distribution dist-tag (e.g. latest, beta, next)'
+        type: string
+        required: false
+        default: 'latest'
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+concurrency:
+  group: "publish-${{ github.ref }}"
+  cancel-in-progress: false
+
+jobs:
+  verify-and-build:
+    name: Verify and Build Library
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run TypeScript typecheck
+        run: npx tsc --noEmit
+
+      - name: Build library packages
+        run: npm run build:lib
+
+      - name: Verify packaging dry-run
+        run: npm pack --dry-run
+
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist/
+          retention-days: 1
+
+  publish-npm:
+    name: Publish to npm Registry
+    needs: [verify-and-build]
+    if: github.event_name != 'workflow_dispatch' || inputs.registry == 'both' || inputs.registry == 'npm'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js for npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist
+
+      - name: Verify npm token presence
+        id: check-token
+        run: |
+          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
+            echo "has_token=false" >> $GITHUB_OUTPUT
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              echo "::warning title=NPM_TOKEN Missing (Dry Run)::NPM_TOKEN is unset, but proceeding with packaging dry-run..."
+            else
+              echo "::warning title=NPM_TOKEN Missing::Secret NPM_TOKEN is not configured in repository secrets. Skipping upload to registry.npmjs.org. To publish to npm, add an npm Automation Token as secret NPM_TOKEN in repository settings."
+            fi
+          else
+            echo "has_token=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish package to npm
+        if: steps.check-token.outputs.has_token == 'true' || inputs.dry_run == true
+        run: |
+          TAG="${{ inputs.tag || 'latest' }}"
+          if [ "${{ github.event_name }}" = "release" ] && [ "${{ github.event.release.prerelease }}" = "true" ] && [ -z "${{ inputs.tag }}" ]; then
+            TAG="next"
+          fi
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "Executing dry-run publish to registry.npmjs.org with tag: $TAG"
+            npm publish --access public --tag "$TAG" --dry-run --ignore-scripts
+          else
+            echo "Publishing package to registry.npmjs.org with tag: $TAG and provenance attestation"
+            npm publish --access public --tag "$TAG" --provenance --ignore-scripts
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-github:
+    name: Publish to GitHub Packages
+    needs: [verify-and-build]
+    if: github.event_name != 'workflow_dispatch' || inputs.registry == 'both' || inputs.registry == 'github'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js for GitHub Packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@yashshingan"
+
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-artifacts
+          path: dist
+
+      - name: Publish package to GitHub Packages
+        run: |
+          TAG="${{ inputs.tag || 'latest' }}"
+          if [ "${{ github.event_name }}" = "release" ] && [ "${{ github.event.release.prerelease }}" = "true" ] && [ -z "${{ inputs.tag }}" ]; then
+            TAG="next"
+          fi
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "Executing dry-run publish to npm.pkg.github.com with tag: $TAG"
+            npm publish --registry=https://npm.pkg.github.com --tag "$TAG" --dry-run --ignore-scripts
+          else
+            echo "Publishing package to npm.pkg.github.com with tag: $TAG"
+            npm publish --registry=https://npm.pkg.github.com --tag "$TAG" --ignore-scripts
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

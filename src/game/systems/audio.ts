@@ -32,7 +32,7 @@ const BPM = 152;
 const STEP = 60 / BPM / 2; // eighth note in seconds
 const STEPS = 32;
 
-class ChiptuneEngine {
+export class ChiptuneEngine {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
   private musicBus: GainNode | null = null;

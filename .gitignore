@@ -62,3 +62,8 @@ prompt
 server.log
 # Skills directory
 /skills/
+
+# Agents and internal test notes
+.agents/
+TEST_INFRA.md
+TEST_READY.md

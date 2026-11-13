@@ -1,0 +1,26 @@
+# Internal agent metadata and logs
+.agents/
+*.log
+
+# CI/CD and automation scripts
+.github/
+scripts/
+
+# Source code & internal documentation
+src/
+docs/
+
+# Next.js build output & caches
+.next/
+out/
+
+# Public assets for web app
+public/
+
+# TypeScript build info & temp files
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# OS artifacts
+.DS_Store
+Thumbs.db

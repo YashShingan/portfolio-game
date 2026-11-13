@@ -65,7 +65,7 @@ function GoldButton({
 
 /* ------------------------------- typewriter ------------------------------- */
 
-function useTypewriter(text: string, speed = 17) {
+export function useTypewriter(text: string, speed = 17) {
   const [count, setCount] = useState(0);
   const [prevText, setPrevText] = useState(text);
   // Adjust state during render when the line changes (documented React pattern)
@@ -88,7 +88,7 @@ function useTypewriter(text: string, speed = 17) {
   return { shown: text.slice(0, count), done: count >= text.length, finish: () => setCount(text.length) };
 }
 
-function Dialogue({ npcId, onClose }: { npcId: string; onClose: () => void }) {
+export function Dialogue({ npcId, onClose }: { npcId: string; onClose: () => void }) {
   const npc = portfolio.npcs.find((n) => n.id === npcId);
   const [line, setLine] = useState(0);
   const tw = useTypewriter(npc?.lines[line] ?? "");
