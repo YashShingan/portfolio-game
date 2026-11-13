@@ -1,5 +1,4 @@
 name: Deploy to GitHub Pages
-run-name: "Deploy site (${{ github.sha }})"
 
 on:
   push:
