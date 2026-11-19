@@ -1,14 +1,14 @@
 import { Joystick } from './chunk-6WA2X3R4.mjs';
 export { Joystick } from './chunk-6WA2X3R4.mjs';
-import { ZoneModal } from './chunk-FRUPUOKV.mjs';
+import { ZoneModal } from './chunk-Z2273457.mjs';
 export { ArcadeMiniGame } from './chunk-PKPKEXDZ.mjs';
 import './chunk-WBQAMGXK.mjs';
-import { WORLD, PATHS, PLAZA, COURIER_PLAZA, POINTS, PROJECT_BOARDS, SKILL_PATCHES } from './chunk-DC3WCUZY.mjs';
-export { createGame } from './chunk-DC3WCUZY.mjs';
+import { WORLD, PATHS, PLAZA, COURIER_PLAZA, POINTS, PROJECT_BOARDS, SKILL_PATCHES } from './chunk-AJII27TS.mjs';
+export { createGame } from './chunk-AJII27TS.mjs';
 import { resetSharedState, gameRuntime } from './chunk-YDGJWAXN.mjs';
 export { gameRuntime, pixelFont, resetSharedState, sharedInput } from './chunk-YDGJWAXN.mjs';
-import { getLocalTimeMode, unlockedIds, onGameEvent, emitGameEvent, portfolio, ACHIEVEMENTS } from './chunk-GCRFGHX2.mjs';
-export { portfolio } from './chunk-GCRFGHX2.mjs';
+import { getLocalTimeMode, unlockedIds, onGameEvent, emitGameEvent, portfolio, ACHIEVEMENTS } from './chunk-OHMSBSCU.mjs';
+export { portfolio } from './chunk-OHMSBSCU.mjs';
 import { audio } from './chunk-ISDBGZ27.mjs';
 export { ChiptuneEngine, audio } from './chunk-ISDBGZ27.mjs';
 import './chunk-STROURK6.mjs';
@@ -160,7 +160,7 @@ function GameOverlay({ open, onClose }) {
       new Promise((r) => setTimeout(r, 1500))
     ]).then(async () => {
       if (destroyed || !containerRef.current) return;
-      const { createGame: createGame2 } = await import('./main-LYCYM5XB.mjs');
+      const { createGame: createGame2 } = await import('./main-UJD46LRA.mjs');
       if (destroyed || !containerRef.current) return;
       gameRef.current = createGame2(containerRef.current);
     });

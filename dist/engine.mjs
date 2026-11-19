@@ -1,7 +1,7 @@
-import { createGame } from './chunk-DC3WCUZY.mjs';
-export { BootScene, Ghost, GhostSystem, NPC, Player, WorldScene, createGame, ghosts, ground_exports as ground, world_exports as world } from './chunk-DC3WCUZY.mjs';
+import { createGame } from './chunk-AJII27TS.mjs';
+export { BootScene, Ghost, GhostSystem, NPC, Player, WorldScene, createGame, ghosts, ground_exports as ground, world_exports as world } from './chunk-AJII27TS.mjs';
 import './chunk-YDGJWAXN.mjs';
-export { events_exports as events } from './chunk-GCRFGHX2.mjs';
+export { events_exports as events } from './chunk-OHMSBSCU.mjs';
 import './chunk-ISDBGZ27.mjs';
 import './chunk-STROURK6.mjs';
 

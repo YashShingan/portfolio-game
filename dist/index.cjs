@@ -205,14 +205,14 @@ var init_portfolio = __esm({
       ],
       contact: {
         emoji: "\u{1F4EE}",
-        email: "yash@example.com",
-        discord: "yashshingan",
+        email: "yash.shingan007@gmail.com",
+        discord: "KLEDXYASH#3204",
         blurb: "Whether it's a full-time engineering role, an ambitious creative project, or a quick coffee chat \u2014 my telegram desk is always open.",
         links: [
-          { label: "Email", value: "yash@example.com", url: "mailto:yash@example.com" },
+          { label: "Email", value: "yash.shingan007@gmail.com", url: "mailto:yash.shingan007@gmail.com" },
           { label: "GitHub", value: "@YashShingan", url: "https://github.com/YashShingan" },
           { label: "LinkedIn", value: "Connect on LinkedIn", url: "https://www.linkedin.com/in/yashshingan" },
-          { label: "Discord", value: "@yashshingan", url: "https://discord.com" }
+          { label: "Discord", value: "KLEDXYASH#3204", url: "https://discord.com" }
         ]
       },
       // NPCs you can chat with in the world

@@ -80,25 +80,11 @@ npm start
 
 ---
 
-## 🌐 Live Deployment on GitHub Pages (Free)
+## 🌐 Live Deployment
 
-This repository includes a pre-configured **GitHub Actions** workflow (`.github/workflows/deploy.yml`) that automatically builds and deploys your static portfolio to **GitHub Pages**:
+This repository includes a pre-configured **GitHub Actions** workflow (`.github/workflows/deploy.yml`) that automatically builds and deploys the portfolio to **GitHub Pages**:
 
 👉 **[https://yashshingan.github.io/portfolio-game/](https://yashshingan.github.io/portfolio-game/)**
-
-### 1-Minute Activation:
-1. Go to your repository on GitHub: [github.com/YashShingan/portfolio-game](https://github.com/YashShingan/portfolio-game)
-2. Click **Settings** (tab at the top) → **Pages** (in the left sidebar).
-3. Under **Build and deployment** > **Source**, choose **`GitHub Actions`**.
-4. That's it! GitHub will run the workflow and deploy the game. Any future `git push` to `main` will automatically build and update the live site.
-
-> 💡 **Tip**: Once activated, paste your live link into the **About** section (`⚙️ Website`) in the right sidebar of your GitHub repository so anyone visiting your repo can jump straight into the game!
-
----
-
-### Alternative: Deploy with Vercel
-
-If you prefer fullstack server-side features (like real-time SSE ghost visitors), you can also import this repo into [Vercel](https://vercel.com) with 1 click.
 
 ---
 

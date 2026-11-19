@@ -1,5 +1,5 @@
 import { ArcadeMiniGame } from './chunk-PKPKEXDZ.mjs';
-import { portfolio, emitGameEvent, unlock } from './chunk-GCRFGHX2.mjs';
+import { portfolio, emitGameEvent, unlock } from './chunk-OHMSBSCU.mjs';
 import { audio } from './chunk-ISDBGZ27.mjs';
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
